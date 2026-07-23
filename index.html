@@ -716,6 +716,14 @@ html.no-js .loader { display: none; }
     /* Points: {x, y (css px), t (born)}. Weight decays with age. */
     const pts = [];
     const MAX_PTS = 150, LIFE = 12000, TAU = 6000;
+    /* Weight = age decay × fade-in × fade-out. The fades are what keep the
+       idle motion liquid: without them each ambient point lands at FULL
+       weight (~1.5 jolts/sec) and dies at 13% weight — the curve visibly
+       jerks. With them, every arrival and departure is a glide. */
+    function weight(p, now) {
+      const age = now - p.t;
+      return Math.exp(-age / TAU) * Math.min(age / 250, 1) * Math.min(Math.max((LIFE - age) / 600, 0), 1);
+    }
     function addPoint(x, y) {
       if (pts.length >= MAX_PTS) pts.shift();
       pts.push({ x, y, t: performance.now() });
@@ -758,7 +766,7 @@ html.no-js .loader { display: none; }
       let S0=0,S1=0,S2=0,S3=0,S4=0,T0=0,T1=0,T2=0,wsum=0,ymean=0;
       for (let i = 0; i < pts.length; i++) {
         const p = pts[i];
-        const w = Math.exp(-(now - p.t) / TAU);
+        const w = weight(p, now);
         const u = (p.x / Math.max(W, 1)) * 2 - 1;
         const u2 = u * u;
         S0 += w; S1 += w*u; S2 += w*u2; S3 += w*u2*u; S4 += w*u2*u2;
@@ -779,7 +787,7 @@ html.no-js .loader { display: none; }
       let ssRes = 0, ssTot = 0;
       for (let i = 0; i < pts.length; i++) {
         const p = pts[i];
-        const w = Math.exp(-(now - p.t) / TAU);
+        const w = weight(p, now);
         const u = (p.x / Math.max(W, 1)) * 2 - 1;
         const yhat = a + b*u + c*u*u;
         ssRes += w * (p.y - yhat) * (p.y - yhat);
@@ -790,9 +798,10 @@ html.no-js .loader { display: none; }
     }
 
     const FELT = "#082f22", CREAM = "242, 238, 227", BRASS = "214, 177, 92";
-    let fieldLive = false, r2Gate = 0;
+    let fieldLive = false, r2Gate = 0, disp = null, lastFrameT = 0;
     function frame() {
       const now = performance.now();
+      const fdt = lastFrameT ? Math.min(now - lastFrameT, 100) : 16.7; lastFrameT = now;
       phase = now / 9000;
 
       // Ambient sampling keeps the field alive when idle
@@ -812,26 +821,38 @@ html.no-js .loader { display: none; }
          a canvas that isn't running. */
       if (model && !fieldLive) { fieldLive = true; document.documentElement.classList.add("has-field"); }
 
-      // Residual whiskers (faint), then points
+      /* Draw a time-smoothed copy of the coefficients (~250ms lag): the fit
+         itself steps whenever a point is born or dies; the DRAWN curve glides. */
       if (model) {
+        if (!disp) disp = { a: model.a, b: model.b, c: model.c };
+        else {
+          const k = 1 - Math.exp(-fdt / 250);
+          disp.a += (model.a - disp.a) * k;
+          disp.b += (model.b - disp.b) * k;
+          disp.c += (model.c - disp.c) * k;
+        }
+      }
+
+      // Residual whiskers (faint), then points
+      if (disp) {
         ctx.lineWidth = 1;
         for (let i = Math.max(0, pts.length - 50); i < pts.length; i++) {
           const p = pts[i];
           const u = (p.x / Math.max(W, 1)) * 2 - 1;
-          const yhat = model.a + model.b*u + model.c*u*u;
+          const yhat = disp.a + disp.b*u + disp.c*u*u;
           ctx.strokeStyle = "rgba(" + CREAM + ", 0.07)";
           ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, yhat); ctx.stroke();
         }
       }
       for (let i = 0; i < pts.length; i++) {
         const p = pts[i];
-        const w = Math.exp(-(now - p.t) / TAU);
+        const w = weight(p, now);
         ctx.fillStyle = "rgba(" + CREAM + ", " + (0.55 * w).toFixed(3) + ")";
         ctx.beginPath(); ctx.arc(p.x, p.y, 1.8, 0, 6.2832); ctx.fill();
       }
 
       // The fitted curve — the brass thread through the noise
-      if (model) {
+      if (disp) {
         ctx.strokeStyle = "rgba(" + BRASS + ", 0.85)";
         ctx.lineWidth = 1.6;
         ctx.beginPath();
@@ -839,11 +860,11 @@ html.no-js .loader { display: none; }
         for (let i = 0; i <= N; i++) {
           const x = (i / N) * W;
           const u = (x / Math.max(W, 1)) * 2 - 1;
-          const y = model.a + model.b*u + model.c*u*u;
+          const y = disp.a + disp.b*u + disp.c*u*u;
           if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
         ctx.stroke();
-        if (r2El && now - r2Gate > 250) { r2Gate = now; r2El.textContent = model.r2.toFixed(2); }
+        if (model && r2El && now - r2Gate > 250) { r2Gate = now; r2El.textContent = model.r2.toFixed(2); }
       }
 
       requestAnimationFrame(frame);
