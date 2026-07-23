@@ -173,6 +173,69 @@ html.no-js .loader { display: none; }
   left: var(--gutter); right: var(--gutter);
 }
 .hero { position: relative; }
+.hero__intro {
+  position: absolute;
+  top: calc(var(--header-h) + clamp(5.5rem, 13vh, 9rem));
+  right: var(--gutter);
+  width: min(31rem, 42vw);
+  z-index: 1;
+}
+.hero__intro-copy {
+  font-size: clamp(1.35rem, 1rem + 1.25vw, 2.2rem);
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.hero__intro-copy span {
+  display: block;
+  margin-top: 0.5em;
+  color: var(--dim);
+  font-size: 0.72em;
+  font-weight: 400;
+  line-height: 1.35;
+}
+.hero__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.7rem 1.35rem;
+  margin-top: clamp(1.35rem, 3vw, 2rem);
+}
+.hero__action {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-block: 0.35rem;
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.hero__action::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0.28);
+  transform-origin: 0 50%;
+  transition: transform 0.45s var(--ease), color 0.35s var(--ease);
+}
+.hero__action:hover { color: var(--paper); }
+.hero__action:hover::after { transform: scaleX(1); }
+.hero__action--primary { color: var(--paper); }
+.hero__action--primary .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--brass);
+}
 .hero__wordmark {
   font-style: italic; font-weight: 700;
   font-size: var(--display-xl); line-height: 0.92; letter-spacing: -0.03em;
@@ -182,7 +245,13 @@ html.no-js .loader { display: none; }
   margin-top: clamp(1.5rem, 4vw, 3rem);
   display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1.5rem;
 }
-.hero__tagline { font-size: var(--step-1); font-style: italic; max-width: 34ch; line-height: 1.3; color: var(--dim); }
+.hero__scope {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
 /* The HUD (and the studio's model sentence) only appear once the field
    actually computes a fit — set via .has-field from the field module.
    Reduced-motion and no-JS visitors never see "live" claims over a dead canvas. */
@@ -198,6 +267,25 @@ html.no-js .loader { display: none; }
 .hero__hud .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brass); animation: livePulse 2.4s cubic-bezier(0.76,0,0.24,1) infinite; }
 .hero__hud b { color: var(--brass); font-weight: 400; }
 @keyframes livePulse { 0%,100%{ opacity: 1 } 50%{ opacity: 0.35 } }
+@media (max-width: 760px) {
+  .hero { min-height: max(100svh, 44rem); }
+  .hero__intro {
+    top: calc(var(--header-h) + 5.25rem);
+    left: var(--gutter);
+    right: var(--gutter);
+    width: auto;
+    max-width: 27rem;
+  }
+  .hero__intro-copy { font-size: clamp(1.3rem, 5.8vw, 1.75rem); max-width: 25ch; }
+  .hero__actions { margin-top: 1.2rem; }
+  .hero__scope { max-width: 24ch; }
+}
+@media (max-width: 420px) {
+  .hero { min-height: max(100svh, 42rem); }
+  .hero__intro { top: calc(var(--header-h) + 4.4rem); }
+  .hero__intro-copy span { margin-top: 0.35em; }
+  .hero__actions { gap: 0.45rem 1rem; }
+}
 
 /* ---- Masked line reveal ---- */
 /* 0.22em compensation: italic serif descenders (the y in "Curry", the J tail)
@@ -261,6 +349,26 @@ html.no-js .loader { display: none; }
 .case__media {
   position: relative; overflow: hidden; aspect-ratio: 2 / 1;
   background: var(--felt-deep); border: 1px solid var(--line);
+}
+.case__media--image { background: #07111f; }
+.case__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: clamp(0.75rem, 2.5vw, 2.25rem);
+  transition: transform 0.9s var(--ease), opacity 0.5s var(--ease);
+}
+.case:hover .case__image { transform: scale(1.025); }
+.case__media--image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(5, 31, 22, 0.06), rgba(5, 31, 22, 0.24)),
+    radial-gradient(circle at 50% 50%, transparent 44%, rgba(5, 31, 22, 0.18) 100%);
+  pointer-events: none;
 }
 /* Designed tile (until real screenshots go in): brand wordmark on a drafted grid */
 .case__ph {
@@ -396,12 +504,22 @@ html.no-js .loader { display: none; }
     <div class="hero__topline">
       <p class="eyebrow" data-reveal>Independent product &amp; data studio — Buffalo, NY</p>
     </div>
+    <div class="hero__intro" data-reveal>
+      <p class="hero__intro-copy">
+        I design and build digital products powered by data and AI.
+        <span>From first idea to daily operation.</span>
+      </p>
+      <div class="hero__actions">
+        <a class="hero__action hero__action--primary" href="#work" data-cursor="WORK"><span class="dot"></span>View selected work ↓</a>
+        <a class="hero__action" href="mailto:jjcurry027@gmail.com" data-cursor="EMAIL">Start a project ↗</a>
+      </div>
+    </div>
     <h1 class="hero__wordmark" id="wordmark">
       <span class="lm"><span>Joe</span></span>
       <span class="lm"><span>Curry</span></span>
     </h1>
     <div class="hero__foot">
-      <p class="hero__tagline">I design, build, and operate software that computes — sites, data products, and AI features that keep working after launch.</p>
+      <p class="hero__scope">Strategy · Design · Build · Data · Operation</p>
       <div class="hero__hud" aria-hidden="true"><span class="dot"></span> Live fit · R² <b id="r2">—</b></div>
     </div>
   </section>
@@ -414,55 +532,20 @@ html.no-js .loader { display: none; }
     </div>
   </div>
 
-  <!-- ===== CAPABILITIES ===== -->
-  <section class="section cap wrap">
-    <div class="cap__head">
-      <h2 class="cap__title" data-reveal>Capabilities</h2>
-      <p class="eyebrow" data-reveal>(01) What I do</p>
-    </div>
-    <div class="cap__list">
-      <div class="cap__item" data-reveal>
-        <span class="cap__num">01</span>
-        <span class="cap__name">Concept &amp; Strategy</span>
-        <span class="cap__desc">What to build, what to measure, and why it will work.</span>
-      </div>
-      <div class="cap__item" data-reveal>
-        <span class="cap__num">02</span>
-        <span class="cap__name">Design &amp; Build</span>
-        <span class="cap__desc">Hand-built sites and web apps — every page drawn and coded for the job, never a template.</span>
-      </div>
-      <div class="cap__item" data-reveal>
-        <span class="cap__num">03</span>
-        <span class="cap__name">Data &amp; Modeling</span>
-        <span class="cap__desc">Databases, dashboards, and forecasts — products that make decisions, not just pages.</span>
-      </div>
-      <div class="cap__item" data-reveal>
-        <span class="cap__num">04</span>
-        <span class="cap__name">AI Integration</span>
-        <span class="cap__desc">LLM features that do real work inside your product, with review built in.</span>
-      </div>
-      <div class="cap__item" data-reveal>
-        <span class="cap__num">05</span>
-        <span class="cap__name">Operation</span>
-        <span class="cap__desc">I run what I ship — monitoring, updates, and daily automated data ops.</span>
-      </div>
-    </div>
-  </section>
-
   <!-- ===== WORK ===== -->
   <section class="section work wrap" id="work">
     <div class="work__head">
       <h2 class="work__title" data-reveal>Selected<br>Work</h2>
-      <p class="eyebrow" data-reveal>(02) Case studies</p>
+      <p class="eyebrow" data-reveal>(01) Case studies</p>
     </div>
 
     <div class="work__grid">
 
       <!-- 01 Icenomics -->
       <article class="case" data-reveal>
-        <div class="case__media">
+        <div class="case__media case__media--image">
           <a class="case__media-link" href="https://jcurry44.github.io/Icenomics" target="_blank" rel="noopener" data-cursor="VISIT" aria-label="Visit Icenomics"></a>
-          <div class="case__ph" data-tag="Market intelligence" aria-hidden="true"><b>Icenomics</b></div>
+          <img class="case__image" src="icenomics-banner.png" alt="" loading="lazy" decoding="async" />
           <a class="case__url" href="https://jcurry44.github.io/Icenomics" target="_blank" rel="noopener" data-cursor="VISIT"><i></i>jcurry44.github.io/Icenomics</a>
         </div>
         <div class="case__meta">
@@ -501,6 +584,41 @@ html.no-js .loader { display: none; }
         <span class="case__index">03 / 03</span>
       </article>
 
+    </div>
+  </section>
+
+  <!-- ===== CAPABILITIES ===== -->
+  <section class="section cap wrap">
+    <div class="cap__head">
+      <h2 class="cap__title" data-reveal>Capabilities</h2>
+      <p class="eyebrow" data-reveal>(02) What I do</p>
+    </div>
+    <div class="cap__list">
+      <div class="cap__item" data-reveal>
+        <span class="cap__num">01</span>
+        <span class="cap__name">Concept &amp; Strategy</span>
+        <span class="cap__desc">What to build, what to measure, and why it will work.</span>
+      </div>
+      <div class="cap__item" data-reveal>
+        <span class="cap__num">02</span>
+        <span class="cap__name">Design &amp; Build</span>
+        <span class="cap__desc">Hand-built sites and web apps — every page drawn and coded for the job, never a template.</span>
+      </div>
+      <div class="cap__item" data-reveal>
+        <span class="cap__num">03</span>
+        <span class="cap__name">Data &amp; Modeling</span>
+        <span class="cap__desc">Databases, dashboards, and forecasts — products that make decisions, not just pages.</span>
+      </div>
+      <div class="cap__item" data-reveal>
+        <span class="cap__num">04</span>
+        <span class="cap__name">AI Integration</span>
+        <span class="cap__desc">LLM features that do real work inside your product, with review built in.</span>
+      </div>
+      <div class="cap__item" data-reveal>
+        <span class="cap__num">05</span>
+        <span class="cap__name">Operation</span>
+        <span class="cap__desc">I run what I ship — monitoring, updates, and daily automated data ops.</span>
+      </div>
     </div>
   </section>
 
