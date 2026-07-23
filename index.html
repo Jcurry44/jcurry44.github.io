@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Joe Curry · Product &amp; data studio</title>
+<meta name="description" content="Joe Curry is an independent product and data studio. Design, build, data, AI, and operation — sites and software that compute, run daily, and keep working after launch." />
+<meta name="theme-color" content="#082f22" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23082f22'/%3E%3Cpath d='M22 70 Q50 18 80 52' stroke='%23d6b15c' stroke-width='6' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='34' cy='44' r='4' fill='%23f2eee3'/%3E%3Ccircle cx='58' cy='60' r='4' fill='%23f2eee3'/%3E%3C/svg%3E" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Joe Curry · Product &amp; data studio" />
+<meta property="og:description" content="Design, build, data, AI, and operation — software that computes and keeps working after launch." />
+<meta property="og:url" content="https://jcurry44.github.io/" />
+<meta property="og:image" content="https://jcurry44.github.io/og-card.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://jcurry44.github.io/og-card.png" />
+<link rel="canonical" href="https://jcurry44.github.io/" />
+
+<style>
+/* ============================================================
+   JOE CURRY — Product & data studio
+   Racing green · paper · brass. System serif italic × mono.
+   No frameworks, no webfonts. The background is a live model:
+   a weighted least-squares fit through points you scatter.
+   ============================================================ */
+
+/* ---- Tokens ---- */
+:root {
+  --felt: #082f22;                       /* racing green — the ground */
+  --felt-deep: #051f16;
+  --paper: #f2eee3;                      /* warm cream ink */
+  --brass: #d6b15c;                      /* the fitted curve, accents */
+  --fg: var(--paper);
+  --dim: rgba(242, 238, 227, 0.74);
+  --faint: rgba(242, 238, 227, 0.58);
+  --line: rgba(242, 238, 227, 0.18);
+
+  --display: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, "SF Mono", monospace;
+
+  --step--1: clamp(0.8rem, 0.75rem + 0.25vw, 0.95rem);
+  --step-0:  clamp(0.98rem, 0.9rem + 0.35vw, 1.15rem);
+  --step-1:  clamp(1.25rem, 1.05rem + 0.9vw, 1.7rem);
+  --step-2:  clamp(1.7rem, 1.3rem + 1.9vw, 2.8rem);
+  --step-3:  clamp(2.4rem, 1.5rem + 4.4vw, 4.8rem);
+  --display-xl: clamp(3.4rem, -0.5rem + 23vw, 17rem);
+
+  --gutter: clamp(1.25rem, 0.6rem + 3vw, 4rem);
+  --section: clamp(4rem, 2.5rem + 7vw, 9rem);
+  --maxw: 1560px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --header-h: clamp(3.75rem, 3rem + 2vw, 5rem);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  font-family: var(--display);
+  font-size: var(--step-0);
+  line-height: 1.55;
+  color: var(--fg);
+  background: var(--felt);               /* fallback if the canvas is gone */
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+a { color: inherit; text-decoration: none; }
+::selection { background: var(--brass); color: var(--felt); }
+:focus-visible { outline: 2px solid var(--brass); outline-offset: 4px; }
+
+.wrap { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter); }
+.section { padding-block: var(--section); position: relative; }
+.eyebrow {
+  font-family: var(--mono); font-size: var(--step--1);
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); font-weight: 400;
+}
+
+/* ---- The field: fixed canvas behind everything ---- */
+.field {
+  position: fixed; inset: 0; z-index: -1;
+  width: 100%; height: 100%; display: block;
+  pointer-events: none;
+  transform: translateZ(0);
+}
+
+/* ---- Film grain ---- */
+.grain {
+  position: fixed; inset: 0; z-index: 9000; pointer-events: none;
+  opacity: 0.05; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---- Cursor (ships hidden; JS reveals on first move) ---- */
+.cursor {
+  position: fixed; top: 0; left: 0; z-index: 9500;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--paper);
+  pointer-events: none; transform: translate(-50%, -50%);
+  transition: width 0.35s var(--ease), height 0.35s var(--ease), opacity 0.3s;
+  display: grid; place-items: center;
+  font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--felt);
+}
+.cursor[data-variant="hover"] { width: 48px; height: 48px; }
+.cursor[data-variant="label"] { width: 84px; height: 84px; }
+.cursor__label { opacity: 0; transition: opacity 0.2s; }
+.cursor[data-variant="label"] .cursor__label { opacity: 1; }
+.cursor.is-hidden { opacity: 0; }
+@media (hover: none), (pointer: coarse) { .cursor { display: none; } }
+
+/* ---- Scroll progress ---- */
+.progress {
+  position: fixed; top: 0; left: 0; height: 2px; width: 100%;
+  transform: scaleX(0); transform-origin: 0 50%;
+  background: var(--brass); z-index: 9400; pointer-events: none;
+}
+
+/* ---- Loader ---- */
+.loader {
+  position: fixed; inset: 0; z-index: 9800;
+  background: var(--felt-deep); color: var(--fg);
+  display: grid; place-items: center;
+  transition: transform 0.8s cubic-bezier(0.76, 0, 0.24, 1);
+}
+.loader.is-leaving { transform: translateY(-100%); pointer-events: none; }
+.loader.is-done { display: none; }
+.loader > div { text-align: center; }   /* the mark must center over the bar, not left-align to it */
+.loader__mark { font-style: italic; font-weight: 700; font-size: clamp(3.5rem, 15vw, 10rem); line-height: 0.9; }
+.loader__count { font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.2em; margin-top: 1rem; color: var(--dim); text-align: center; }
+.loader__bar { height: 2px; width: min(56vw, 320px); margin: 1.2rem auto 0; background: rgba(242,238,227,0.12); overflow: hidden; }
+.loader__bar i { display: block; height: 100%; width: 0%; background: var(--brass); }
+html.no-js .loader { display: none; }
+
+/* ---- Header (strip never intercepts; only links do) ---- */
+.header {
+  position: fixed; inset: 0 0 auto 0; z-index: 8000;
+  height: var(--header-h); display: flex; align-items: center;
+  pointer-events: none;
+}
+.header a { pointer-events: auto; }
+.header::before {
+  content: ""; position: absolute; inset: -1px 0 -35% 0; z-index: -1;
+  background: linear-gradient(to bottom, rgba(5, 31, 22, 0.88) 0%, rgba(5, 31, 22, 0.45) 55%, rgba(5, 31, 22, 0) 100%);
+}
+.header__row {
+  width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter);
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+}
+.brand { font-style: italic; font-weight: 700; font-size: clamp(1.05rem, 0.9rem + 0.8vw, 1.4rem); }
+.header__meta { display: flex; align-items: center; gap: clamp(1rem, 2.5vw, 2.2rem); font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
+.header__meta .nav-links { display: flex; gap: clamp(0.9rem, 2vw, 1.8rem); }
+.header__meta .nav-links a { position: relative; padding-block: 0.25rem; }
+.header__meta .nav-links a::after {
+  content: ""; position: absolute; left: 0; bottom: 0; height: 1px; width: 100%;
+  background: currentColor; transform: scaleX(0); transform-origin: 100% 50%;
+  transition: transform 0.45s var(--ease);
+}
+.header__meta .nav-links a:hover::after { transform: scaleX(1); transform-origin: 0 50%; }
+.clock { font-variant-numeric: tabular-nums; }
+@media (max-width: 720px) { .header__meta .nav-links, .header__meta .clock { display: none; } }
+
+/* ---- Hero ---- */
+.hero {
+  min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end;
+  padding-block: calc(var(--header-h) + 2rem) clamp(1.5rem, 4vw, 3rem);
+  overflow: hidden;
+}
+.hero__topline {
+  position: absolute; top: calc(var(--header-h) + clamp(1.2rem, 4vw, 3rem));
+  left: var(--gutter); right: var(--gutter);
+}
+.hero { position: relative; }
+.hero__wordmark {
+  font-style: italic; font-weight: 700;
+  font-size: var(--display-xl); line-height: 0.92; letter-spacing: -0.03em;
+  margin-left: -0.03em;
+}
+.hero__foot {
+  margin-top: clamp(1.5rem, 4vw, 3rem);
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1.5rem;
+}
+.hero__tagline { font-size: var(--step-1); font-style: italic; max-width: 34ch; line-height: 1.3; color: var(--dim); }
+/* The HUD (and the studio's model sentence) only appear once the field
+   actually computes a fit — set via .has-field from the field module.
+   Reduced-motion and no-JS visitors never see "live" claims over a dead canvas. */
+.hero__hud {
+  font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--dim);
+  display: flex; align-items: center; gap: 0.6rem;
+  visibility: hidden;
+}
+.has-field .hero__hud { visibility: visible; }
+.studio__note { display: none; }
+.has-field .studio__note { display: block; }
+.hero__hud .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brass); animation: livePulse 2.4s cubic-bezier(0.76,0,0.24,1) infinite; }
+.hero__hud b { color: var(--brass); font-weight: 400; }
+@keyframes livePulse { 0%,100%{ opacity: 1 } 50%{ opacity: 0.35 } }
+
+/* ---- Masked line reveal ---- */
+/* 0.22em compensation: italic serif descenders (the y in "Curry", the J tail)
+   run deeper than sans — a tighter mask visibly clips them. Hidden state is
+   130% so ascenders can't peek through the deeper descender window. */
+.lm { display: block; overflow: hidden; padding-bottom: 0.22em; margin-bottom: -0.22em; }
+.lm > span { display: block; }
+.js .lm > span { transform: translateY(130%); transition: transform 1.05s var(--ease); }
+.js .lm.in > span, .js .in .lm > span { transform: translateY(0); }
+
+/* ---- Generic fade-up reveal ---- */
+.js [data-reveal] { opacity: 0; transform: translateY(26px); transition: opacity 0.85s var(--ease), transform 0.85s var(--ease); }
+.js [data-reveal].in { opacity: 1; transform: translateY(0); }
+
+/* ---- Marquee ---- */
+.marquee { border-block: 1px solid var(--line); overflow: hidden; white-space: nowrap; padding-block: clamp(0.7rem, 1.4vw, 1rem); user-select: none; }
+.marquee__track { display: inline-flex; will-change: transform; }
+.marquee__track span {
+  font-style: italic; font-weight: 700;
+  font-size: clamp(1.4rem, 4vw, 3rem);
+  padding-inline: 0.55em; display: inline-flex; align-items: center; gap: 0.55em;
+}
+.marquee__track span::after { content: "×"; color: var(--brass); opacity: 0.55; font-style: normal; font-size: 0.6em; }
+
+/* ---- Capabilities ---- */
+.cap__head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: clamp(2rem, 5vw, 4rem); flex-wrap: wrap; }
+.cap__title { font-size: var(--step-2); font-style: italic; font-weight: 700; }
+.cap__list { border-top: 1px solid var(--line); }
+.cap__item {
+  display: grid; grid-template-columns: 4rem 1fr auto; gap: 1rem; align-items: center;
+  padding-block: clamp(1.2rem, 2.6vw, 2rem); border-bottom: 1px solid var(--line);
+  position: relative; transition: padding-left 0.5s var(--ease);
+}
+.cap__num { font-family: var(--mono); font-size: var(--step--1); color: var(--faint); }
+.cap__name { font-style: italic; font-weight: 700; font-size: var(--step-2); line-height: 1; transition: transform 0.5s var(--ease); }
+.cap__desc { font-size: var(--step-0); color: var(--dim); max-width: 34ch; justify-self: end; text-align: right; }
+.cap__item::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 0;
+  background: var(--paper); opacity: 0.04; transition: width 0.5s var(--ease);
+}
+@media (hover: hover) {
+  .cap__item:hover::before { width: 100%; }
+  .cap__item:hover { padding-left: 1.5rem; }
+  .cap__item:hover .cap__name { transform: translateX(4px); }
+}
+@media (max-width: 720px) {
+  .cap__item { grid-template-columns: 2.5rem 1fr; }
+  .cap__desc { grid-column: 1 / -1; justify-self: start; text-align: left; margin-top: 0.5rem; }
+}
+
+/* ---- Work / case studies ---- */
+.work__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: clamp(2.5rem, 6vw, 5rem); flex-wrap: wrap; }
+.work__title { font-size: var(--step-3); font-style: italic; font-weight: 700; line-height: 0.95; }
+.work__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(2.5rem, 5vw, 5rem) clamp(1.25rem, 3vw, 2.5rem); }
+
+.case { display: block; grid-column: span 2; }
+.case--md { grid-column: span 1; }
+.case--md .case__meta { flex-direction: column; align-items: flex-start; gap: 0.45rem; }
+.case--md .case__ph b { font-size: clamp(1.8rem, 4.5vw, 3.6rem); }
+@media (max-width: 880px) { .case--md { grid-column: span 2; } }
+.case__media {
+  position: relative; overflow: hidden; aspect-ratio: 2 / 1;
+  background: var(--felt-deep); border: 1px solid var(--line);
+}
+/* Designed tile (until real screenshots go in): brand wordmark on a drafted grid */
+.case__ph {
+  position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 39px, rgba(242,238,227,0.05) 39px 40px),
+    repeating-linear-gradient(90deg, transparent 0 39px, rgba(242,238,227,0.05) 39px 40px),
+    linear-gradient(160deg, var(--felt) 0%, var(--felt-deep) 100%);
+}
+.case__ph b {
+  font-style: italic; font-weight: 700;
+  font-size: clamp(2.2rem, 8vw, 6rem); line-height: 0.9;
+  text-align: center; color: var(--paper); opacity: 0.94;
+  transition: transform 0.9s var(--ease);
+}
+.case:hover .case__ph b { transform: scale(1.04); }
+.case__ph::after {
+  content: attr(data-tag); position: absolute; top: 1rem; left: 1rem;   /* bottom corners belong to the URL pill / status badge */
+  font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(242,238,227,0.62);
+}
+.case__media-link { position: absolute; inset: 0; z-index: 1; }
+
+.case__url {
+  position: absolute; left: clamp(0.8rem, 1.5vw, 1.1rem); bottom: clamp(0.8rem, 1.5vw, 1.1rem); z-index: 2;
+  display: inline-flex; align-items: center; gap: 0.55em;
+  font-family: var(--mono); font-size: var(--step--1); color: var(--paper);
+  padding: 0.4em 0.8em; border: 1px solid rgba(242, 238, 227, 0.3); border-radius: 100px;
+  background: rgba(5, 31, 22, 0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.case__url i { width: 7px; height: 7px; border-radius: 50%; background: var(--brass); flex: none; animation: livePulse 2.4s cubic-bezier(0.76,0,0.24,1) infinite; }
+.case__badge {
+  position: absolute; right: clamp(0.8rem, 1.5vw, 1.1rem); bottom: clamp(0.8rem, 1.5vw, 1.1rem); z-index: 2;
+  font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--dim); padding: 0.4em 0.8em; border: 1px solid var(--line); border-radius: 100px;
+  background: rgba(5, 31, 22, 0.5);
+}
+.case__meta { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-top: clamp(0.9rem, 1.8vw, 1.4rem); flex-wrap: wrap; }
+.case__name { font-style: italic; font-weight: 700; font-size: var(--step-2); line-height: 1; }
+.case__role { font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
+.case__line { margin-top: 0.6rem; color: var(--dim); max-width: 58ch; font-size: var(--step-0); }
+.case__index { font-family: var(--mono); font-size: var(--step--1); color: var(--faint); }
+
+/* ---- Studio ---- */
+.studio__grid { display: grid; grid-template-columns: 1fr; gap: clamp(2.5rem, 6vw, 5rem); }
+@media (min-width: 880px) { .studio__grid { grid-template-columns: 0.9fr 1.1fr; align-items: start; } }
+.studio__lead { font-style: italic; font-weight: 700; font-size: var(--step-2); line-height: 1.12; }
+.studio__body p { font-size: var(--step-1); line-height: 1.5; margin-bottom: 1.4rem; max-width: 56ch; color: var(--dim); }
+.studio__body p:last-child { margin-bottom: 0; }
+.studio__stats { margin-top: clamp(2.5rem, 5vw, 4rem); display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; border-top: 1px solid var(--line); padding-top: clamp(1.5rem, 3vw, 2.5rem); }
+@media (max-width: 560px) { .studio__stats { grid-template-columns: 1fr 1fr; } }
+.stat__n { font-style: italic; font-weight: 700; font-size: var(--step-2); line-height: 0.95; white-space: nowrap; color: var(--brass); }
+.stat__l { font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-top: 0.6rem; }
+
+/* ---- CTA ---- */
+.cta { text-align: center; }
+.cta__line { font-style: italic; font-weight: 700; font-size: var(--step-3); line-height: 1; }
+.cta__btn {
+  display: inline-flex; align-items: center; gap: 0.8rem; margin-top: clamp(2.5rem, 5vw, 4rem);
+  font-family: var(--mono); font-size: var(--step-0); letter-spacing: 0.06em; text-transform: uppercase;
+  border: 1px solid var(--fg); padding: 1rem 2rem; border-radius: 100px;
+  transition: background 0.4s var(--ease), color 0.4s var(--ease);
+}
+.cta__btn:hover { background: var(--paper); color: var(--felt); }
+.cta__btn .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brass); }
+@media (max-width: 640px) { .cta__btn { width: 100%; justify-content: center; } }
+
+/* ---- Footer ---- */
+.footer { padding-block: clamp(2.5rem, 5vw, 4rem) clamp(1.8rem, 3vw, 2.5rem); border-top: 1px solid var(--line); }
+.footer__row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.08em; color: var(--dim); }
+
+/* ---- Print ---- */
+@media print {
+  /* Remap the tokens, not just body color — every dim/faint/brass text is
+     token-driven and would otherwise print cream-on-white (invisible). */
+  :root {
+    --felt: #ffffff; --felt-deep: #ffffff; --paper: #111111;
+    --fg: #111111; --dim: #333333; --faint: #555555;
+    --brass: #7a5f22; --line: #bbbbbb;
+  }
+  .js [data-reveal], .js .lm > span { opacity: 1 !important; transform: none !important; }
+  .loader, .cursor, .grain, .progress, .field, .marquee { display: none !important; }
+  body { background: #fff; color: #111; }
+  .case__url, .case__badge { background: none; color: #333; border-color: #bbb; }
+}
+
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+  .js [data-reveal], .js .lm > span { opacity: 1 !important; transform: none !important; }
+  .loader { display: none !important; }
+  .field { display: none; }
+}
+</style>
+<!-- The js class is flipped by the body script itself (not here): if that
+     script ever fails to run, the page stays in no-js form — everything
+     visible, loader hidden — instead of a curtain over invisible content. -->
+</head>
+<body>
+
+<canvas class="field" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor is-hidden" aria-hidden="true"><span class="cursor__label"></span></div>
+<div class="progress" aria-hidden="true"></div>
+
+<div class="loader" id="loader" aria-hidden="true">
+  <div>
+    <div class="loader__mark">JC</div>
+    <div class="loader__count"><span id="loaderCount">000</span> / Joe Curry</div>
+    <div class="loader__bar"><i id="loaderBar"></i></div>
+  </div>
+</div>
+
+<header class="header">
+  <div class="header__row">
+    <a href="#top" class="brand" data-cursor="TOP">Joe Curry</a>
+    <div class="header__meta">
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#work">Work</a>
+        <a href="#studio">Studio</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <span class="clock" id="clock" aria-hidden="true">--:--:--</span>
+      <a href="mailto:jjcurry027@gmail.com" data-cursor="EMAIL">Email</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero wrap" id="top">
+    <div class="hero__topline">
+      <p class="eyebrow" data-reveal>Independent product &amp; data studio — Buffalo, NY</p>
+    </div>
+    <h1 class="hero__wordmark" id="wordmark">
+      <span class="lm"><span>Joe</span></span>
+      <span class="lm"><span>Curry</span></span>
+    </h1>
+    <div class="hero__foot">
+      <p class="hero__tagline">I design, build, and operate software that computes — sites, data products, and AI features that keep working after launch.</p>
+      <div class="hero__hud" aria-hidden="true"><span class="dot"></span> Live fit · R² <b id="r2">—</b></div>
+    </div>
+  </section>
+
+  <!-- ===== MARQUEE ===== -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee__track" id="marquee">
+      <span>Product Design</span><span>Web Development</span><span>Data &amp; Modeling</span><span>AI Integration</span><span>Operation</span>
+      <span>Product Design</span><span>Web Development</span><span>Data &amp; Modeling</span><span>AI Integration</span><span>Operation</span>
+    </div>
+  </div>
+
+  <!-- ===== CAPABILITIES ===== -->
+  <section class="section cap wrap">
+    <div class="cap__head">
+      <h2 class="cap__title" data-reveal>Capabilities</h2>
+      <p class="eyebrow" data-reveal>(01) What I do</p>
+    </div>
+    <div class="cap__list">
+      <div class="cap__item" data-reveal>
+        <span class="cap__num">01</span>
+        <span class="cap__name">Concept &amp; Strategy</span>
+        <span class="cap__desc">What to build, what to measure, and why it will work.</span>
+      </div>
+      <div class="cap__item" data-reveal>
+        <span class="cap__num">02</span>
+        <span class="cap__name">Design &amp; Build</span>
+        <span class="cap__desc">Hand-built sites and web apps — every page drawn and coded for the job, never a template.</span>
+      </div>
+      <div class="cap__item" data-reveal>
+        <span class="cap__num">03</span>
+        <span class="cap__name">Data &amp; Modeling</span>
+        <span class="cap__desc">Databases, dashboards, and forecasts — products that make decisions, not just pages.</span>
+      </div>
+      <div class="cap__item" data-reveal>
+        <span class="cap__num">04</span>
+        <span class="cap__name">AI Integration</span>
+        <span class="cap__desc">LLM features that do real work inside your product, with review built in.</span>
+      </div>
+      <div class="cap__item" data-reveal>
+        <span class="cap__num">05</span>
+        <span class="cap__name">Operation</span>
+        <span class="cap__desc">I run what I ship — monitoring, updates, and daily automated data ops.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== WORK ===== -->
+  <section class="section work wrap" id="work">
+    <div class="work__head">
+      <h2 class="work__title" data-reveal>Selected<br>Work</h2>
+      <p class="eyebrow" data-reveal>(02) Case studies</p>
+    </div>
+
+    <div class="work__grid">
+
+      <!-- 01 Icenomics -->
+      <article class="case" data-reveal>
+        <div class="case__media">
+          <a class="case__media-link" href="https://jcurry44.github.io/Icenomics" target="_blank" rel="noopener" data-cursor="VISIT" aria-label="Visit Icenomics"></a>
+          <div class="case__ph" data-tag="Market intelligence" aria-hidden="true"><b>Icenomics</b></div>
+          <a class="case__url" href="https://jcurry44.github.io/Icenomics" target="_blank" rel="noopener" data-cursor="VISIT"><i></i>jcurry44.github.io/Icenomics</a>
+        </div>
+        <div class="case__meta">
+          <span class="case__name">Icenomics</span>
+          <span class="case__role">Concept · Data · Build · Operation</span>
+        </div>
+        <p class="case__line">A live market-intelligence platform that prices professional hockey contracts: 2,000+ interactive asset pages, forecast models with published accuracy, a what-if trade simulator, and automated daily data operations. Its arbitration forecasts are pre-registered and publicly anchored before the hearings — a data product built end-to-end and run by one person.</p>
+        <span class="case__index">01 / 03</span>
+      </article>
+
+      <!-- 02 Nicastro -->
+      <article class="case case--md" data-reveal>
+        <div class="case__media">
+          <div class="case__ph" data-tag="Client build" aria-hidden="true"><b>Nicastro<br>Accounting</b></div>
+          <span class="case__badge">In owner review</span>
+        </div>
+        <div class="case__meta">
+          <span class="case__name">Nicastro Accounting</span>
+          <span class="case__role">Design · Build</span>
+        </div>
+        <p class="case__line">Site design and build for a Western New York accounting firm: a living-ledger hero, a tax-deadline radar, and a personalized document-checklist builder. A site that works the way the firm does — precise, calm, and useful before the first phone call.</p>
+        <span class="case__index">02 / 03</span>
+      </article>
+
+      <!-- 03 7 Construction -->
+      <article class="case case--md" data-reveal>
+        <div class="case__media">
+          <div class="case__ph" data-tag="Client build" aria-hidden="true"><b>7 Construction</b></div>
+          <span class="case__badge">In owner review</span>
+        </div>
+        <div class="case__meta">
+          <span class="case__name">7 Construction</span>
+          <span class="case__role">Design · Build</span>
+        </div>
+        <p class="case__line">A blueprint-styled site for a family framing company in North Tonawanda: drafting-table aesthetic, a project gallery, and a lead form built for phone-first customers who need a framer, not a brochure.</p>
+        <span class="case__index">03 / 03</span>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ===== STUDIO ===== -->
+  <section class="section studio wrap" id="studio">
+    <p class="eyebrow" data-reveal style="margin-bottom: clamp(2rem, 5vw, 4rem)">(03) Studio</p>
+    <div class="studio__grid">
+      <h2 class="studio__lead"><span class="lm"><span>The whole job,</span></span><span class="lm"><span>one pair of hands.</span></span></h2>
+      <div class="studio__body">
+        <p data-reveal>I'm Joe Curry — I build web products the whole way through: the idea, the brand, the interface, the data model, the deployment, and the boring-but-vital part where it keeps running every day after launch.</p>
+        <p data-reveal class="studio__note">The background of this page is a live weighted least-squares model — a curve continuously re-fit through drifting data points, and any you scatter with your pointer. That's the studio in one image: signal from noise, computed in front of you.</p>
+        <div class="studio__stats">
+          <div data-reveal><div class="stat__n">Start→Run</div><div class="stat__l">Concept through operation</div></div>
+          <div data-reveal><div class="stat__n">1 builder</div><div class="stat__l">Direct line, no hand-offs</div></div>
+          <div data-reveal><div class="stat__n">Daily</div><div class="stat__l">Automated ops on live products</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="section cta wrap" id="contact">
+    <p class="eyebrow" data-reveal style="margin-bottom: clamp(1.5rem, 3vw, 2.5rem)">(04) Contact</p>
+    <h2 class="cta__line"><span class="lm"><span>Have a thing that</span></span><span class="lm"><span>should compute?</span></span></h2>
+    <a href="mailto:jjcurry027@gmail.com" class="cta__btn" data-cursor="EMAIL">
+      <span class="dot"></span> jjcurry027@gmail.com
+    </a>
+  </section>
+
+</main>
+
+<footer class="footer wrap">
+  <div class="footer__row">
+    <span>© <span id="year">2026</span> Joe Curry</span>
+    <span>Racing green · System serif · Live least squares</span>
+    <a href="#top" data-cursor="TOP">Back to top ↑</a>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   JOE CURRY — behavior. Independent, feature-gated modules;
+   the page is complete without any of them.
+   ============================================================ */
+(function () {
+  "use strict";
+
+  /* Flip no-js → js HERE: reveal-hiding and the loader only engage once
+     this script is provably running. */
+  document.documentElement.classList.remove("no-js");
+  document.documentElement.classList.add("js");
+
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const canHover = matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+  /* ---- Clock (Eastern) ---- */
+  (function clock() {
+    const el = document.getElementById("clock");
+    if (!el) return;
+    const fmt = new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false, timeZone: "America/New_York" });
+    const tick = () => { el.textContent = fmt.format(new Date()); };
+    tick(); setInterval(tick, 1000);
+  })();
+
+  /* ---- Footer year ---- */
+  const yearEl = document.getElementById("year");
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  /* ---- Loader (watchdog first: rAF doesn't tick in background tabs,
+          and a page must never trap itself behind its own curtain) ---- */
+  function runLoader(done) {
+    const loader = document.getElementById("loader");
+    if (!loader || reduceMotion) { if (loader) loader.classList.add("is-done"); return done(); }
+    const count = document.getElementById("loaderCount");
+    const bar = document.getElementById("loaderBar");
+    let finished = false;
+    function finish() {
+      if (finished) return; finished = true;
+      loader.classList.add("is-leaving");
+      loader.addEventListener("transitionend", () => loader.classList.add("is-done"), { once: true });
+      setTimeout(() => loader.classList.add("is-done"), 1200);
+      done();
+    }
+    setTimeout(finish, 2600);
+    const t0 = performance.now(), DUR = 900;
+    (function step(now) {
+      const p = Math.min((now - t0) / DUR, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const n = Math.round(eased * 100);
+      count.textContent = String(n).padStart(3, "0");
+      bar.style.width = n + "%";
+      if (p < 1) return requestAnimationFrame(step);
+      setTimeout(finish, 120);
+    })(t0);
+  }
+
+  /* ---- Reveals ---- */
+  function initReveals() {
+    document.querySelectorAll("#wordmark .lm").forEach((lm, i) => {
+      setTimeout(() => lm.classList.add("in"), 80 + i * 130);
+    });
+    document.querySelectorAll(".hero [data-reveal]").forEach((el, i) => {
+      setTimeout(() => el.classList.add("in"), 450 + i * 120);
+    });
+    const rest = [...document.querySelectorAll("[data-reveal], .lm")]
+      .filter((el) => !el.closest(".hero") && !el.closest("#wordmark"));
+    if (!("IntersectionObserver" in window)) { rest.forEach((el) => el.classList.add("in")); return; }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        e.target.classList.add("in");
+        io.unobserve(e.target);
+      });
+    }, { rootMargin: "0px 0px -12% 0px" });
+    rest.forEach((el) => io.observe(el));
+  }
+
+  /* ---- Cursor ---- */
+  (function cursor() {
+    if (!canHover) return;
+    const cur = document.querySelector(".cursor");
+    if (!cur) return;
+    const lbl = cur.querySelector(".cursor__label");
+    let tx = innerWidth / 2, ty = innerHeight / 2, x = tx, y = ty, visible = false, raf = null;
+    function frame() {
+      x += (tx - x) * 0.18;
+      y += (ty - y) * 0.18;
+      cur.style.transform = "translate(" + x + "px," + y + "px) translate(-50%,-50%)";
+      raf = (Math.abs(tx - x) > 0.1 || Math.abs(ty - y) > 0.1) ? requestAnimationFrame(frame) : null;
+    }
+    addEventListener("mousemove", (e) => {
+      tx = e.clientX; ty = e.clientY;
+      if (!visible) { visible = true; x = tx; y = ty; cur.classList.remove("is-hidden"); }
+      if (!raf) raf = requestAnimationFrame(frame);
+    }, { passive: true });
+    document.documentElement.addEventListener("mouseleave", () => { visible = false; cur.classList.add("is-hidden"); });
+    document.querySelectorAll("a, button, [data-cursor]").forEach((el) => {
+      const label = el.getAttribute("data-cursor");
+      el.addEventListener("mouseenter", () => {
+        cur.setAttribute("data-variant", label ? "label" : "hover");
+        if (lbl) lbl.textContent = label || "";
+      });
+      el.addEventListener("mouseleave", () => {
+        cur.removeAttribute("data-variant");
+        if (lbl) lbl.textContent = "";
+      });
+    });
+  })();
+
+  /* ---- Scroll progress + velocity marquee (one rAF loop) ---- */
+  (function scrollDriven() {
+    const prog = document.querySelector(".progress");
+    const track = document.getElementById("marquee");
+    if (reduceMotion) return;
+    let vel = 0, lastY = scrollY, mx = 0, lastT = performance.now();
+    addEventListener("scroll", () => { const y = scrollY; vel = y - lastY; lastY = y; }, { passive: true });
+    function frame(t) {
+      const dt = Math.min(t - lastT, 50); lastT = t;
+      if (prog) {
+        const max = document.documentElement.scrollHeight - innerHeight;
+        prog.style.transform = "scaleX(" + (max > 0 ? scrollY / max : 0) + ")";
+      }
+      if (track && !track.__filled && track.scrollWidth > 0) {
+        /* One copy must span the viewport for the exact-half wrap to be seamless */
+        let guard = 0;
+        while (track.scrollWidth / 2 < innerWidth && guard++ < 6) track.innerHTML += track.innerHTML;
+        track.__filled = true;
+        addEventListener("resize", () => {
+          let g = 0;
+          while (track.scrollWidth / 2 < innerWidth && g++ < 6) track.innerHTML += track.innerHTML;
+        });
+      }
+      if (track) {
+        vel *= 0.9;
+        const speed = 0.04 + Math.min(Math.abs(vel) * 0.010, 1.1);
+        mx -= speed * dt;
+        const half = track.scrollWidth / 2;
+        if (half && -mx >= half) mx += half;
+        track.style.transform = "translateX(" + mx + "px)";
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  })();
+
+  /* =========================================================
+     THE FITTING FIELD — the studio's signature.
+     Points appear (ambient drift + your cursor), each with an
+     age-decayed weight, and every frame a weighted quadratic
+     least-squares fit is solved and drawn through them. The
+     R² of the current fit ticks in the hero HUD. Plain 2D
+     canvas — the model is the spectacle, not the renderer.
+     ========================================================= */
+  (function field() {
+    const canvas = document.querySelector(".field");
+    if (!canvas || reduceMotion) return;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) { canvas.remove(); return; }
+
+    let W = 0, H = 0, dpr = 1;
+    function resize() {
+      dpr = Math.min(devicePixelRatio || 1, 2);
+      W = canvas.clientWidth || innerWidth;
+      H = canvas.clientHeight || innerHeight;
+      canvas.width = Math.max(1, Math.round(W * dpr));
+      canvas.height = Math.max(1, Math.round(H * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    if (typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(() => { if (canvas.clientWidth > 0) resize(); }).observe(canvas);
+    } else { addEventListener("resize", resize); resize(); }
+
+    /* Points: {x, y (css px), t (born)}. Weight decays with age. */
+    const pts = [];
+    const MAX_PTS = 150, LIFE = 12000, TAU = 6000;
+    function addPoint(x, y) {
+      if (pts.length >= MAX_PTS) pts.shift();
+      pts.push({ x, y, t: performance.now() });
+    }
+
+    /* Ambient truth: a slowly-morphing curve the idle points sample,
+       so the field always has structure worth fitting. */
+    let phase = 0;
+    function truth(x) {
+      const u = x / Math.max(W, 1);
+      return H * (0.42 + 0.16 * Math.sin(u * 4.2 + phase) + 0.08 * Math.sin(u * 9.1 - phase * 1.7));
+    }
+    let lastAmbient = 0;
+
+    /* Input: cursor scatters points; clicks burst; touch drags scatter */
+    let gate = 0;
+    if (canHover) {
+      addEventListener("pointermove", (e) => {
+        const now = performance.now();
+        if (now - gate > 70) { gate = now; addPoint(e.clientX, e.clientY + (Math.random() - 0.5) * 24); }
+      }, { passive: true });
+      addEventListener("pointerdown", (e) => {
+        for (let i = 0; i < 10; i++) {
+          addPoint(e.clientX + (Math.random() - 0.5) * 120, e.clientY + (Math.random() - 0.5) * 80);
+        }
+      }, { passive: true });
+    } else {
+      addEventListener("touchmove", (e) => {
+        const t = e.changedTouches[0]; if (!t) return;
+        const now = performance.now();
+        if (now - gate > 70) { gate = now; addPoint(t.clientX, t.clientY + (Math.random() - 0.5) * 24); }
+      }, { passive: true });
+    }
+
+    /* Weighted quadratic LSQ over x normalized to [-1,1] (conditioning).
+       Solves the 3x3 normal equations by Cramer's rule; falls back to a
+       weighted mean line when points are too few or collinear-degenerate. */
+    const r2El = document.getElementById("r2");
+    function fit(now) {
+      let S0=0,S1=0,S2=0,S3=0,S4=0,T0=0,T1=0,T2=0,wsum=0,ymean=0;
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i];
+        const w = Math.exp(-(now - p.t) / TAU);
+        const u = (p.x / Math.max(W, 1)) * 2 - 1;
+        const u2 = u * u;
+        S0 += w; S1 += w*u; S2 += w*u2; S3 += w*u2*u; S4 += w*u2*u2;
+        T0 += w*p.y; T1 += w*u*p.y; T2 += w*u2*p.y;
+        wsum += w;
+      }
+      if (wsum < 4) return null;
+      ymean = T0 / S0;
+      /* An absolute det cutoff is scale-blind: a tight same-x column of points
+         passes it and solves to a wild curve. Gate on x-spread instead. */
+      const varU = S2 / S0 - (S1 / S0) * (S1 / S0);
+      if (varU < 0.0015) return { a: ymean, b: 0, c: 0, r2: 0, ymean };
+      const det = S0*(S2*S4 - S3*S3) - S1*(S1*S4 - S2*S3) + S2*(S1*S3 - S2*S2);
+      if (Math.abs(det) < 1e-9) return { a: ymean, b: 0, c: 0, r2: 0, ymean };
+      const a = (T0*(S2*S4 - S3*S3) - S1*(T1*S4 - T2*S3) + S2*(T1*S3 - T2*S2)) / det;
+      const b = (S0*(T1*S4 - T2*S3) - T0*(S1*S4 - S2*S3) + S2*(S1*T2 - S2*T1)) / det;
+      const c = (S0*(S2*T2 - S3*T1) - S1*(S1*T2 - S2*T1) + T0*(S1*S3 - S2*S2)) / det;
+      let ssRes = 0, ssTot = 0;
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i];
+        const w = Math.exp(-(now - p.t) / TAU);
+        const u = (p.x / Math.max(W, 1)) * 2 - 1;
+        const yhat = a + b*u + c*u*u;
+        ssRes += w * (p.y - yhat) * (p.y - yhat);
+        ssTot += w * (p.y - ymean) * (p.y - ymean);
+      }
+      const r2 = ssTot > 1e-6 ? Math.max(0, Math.min(1, 1 - ssRes / ssTot)) : 0;
+      return { a, b, c, r2, ymean };
+    }
+
+    const FELT = "#082f22", CREAM = "242, 238, 227", BRASS = "214, 177, 92";
+    let fieldLive = false, r2Gate = 0;
+    function frame() {
+      const now = performance.now();
+      phase = now / 9000;
+
+      // Ambient sampling keeps the field alive when idle
+      if (now - lastAmbient > 650 && pts.length < 60) {
+        lastAmbient = now;
+        const x = Math.random() * W;
+        addPoint(x, truth(x) + (Math.random() - 0.5) * H * 0.12);
+      }
+      while (pts.length && now - pts[0].t > LIFE) pts.shift();
+
+      ctx.fillStyle = FELT;
+      ctx.fillRect(0, 0, W + 2, H + 2);   /* overfill: fractional-DPR rounding otherwise leaves a black edge seam */
+
+      const model = fit(now);
+      /* The HUD and the "live model" copy only appear once a fit actually
+         exists — reduced-motion / no-JS visitors never read claims about
+         a canvas that isn't running. */
+      if (model && !fieldLive) { fieldLive = true; document.documentElement.classList.add("has-field"); }
+
+      // Residual whiskers (faint), then points
+      if (model) {
+        ctx.lineWidth = 1;
+        for (let i = Math.max(0, pts.length - 50); i < pts.length; i++) {
+          const p = pts[i];
+          const u = (p.x / Math.max(W, 1)) * 2 - 1;
+          const yhat = model.a + model.b*u + model.c*u*u;
+          ctx.strokeStyle = "rgba(" + CREAM + ", 0.07)";
+          ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, yhat); ctx.stroke();
+        }
+      }
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i];
+        const w = Math.exp(-(now - p.t) / TAU);
+        ctx.fillStyle = "rgba(" + CREAM + ", " + (0.55 * w).toFixed(3) + ")";
+        ctx.beginPath(); ctx.arc(p.x, p.y, 1.8, 0, 6.2832); ctx.fill();
+      }
+
+      // The fitted curve — the brass thread through the noise
+      if (model) {
+        ctx.strokeStyle = "rgba(" + BRASS + ", 0.85)";
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        const N = 72;
+        for (let i = 0; i <= N; i++) {
+          const x = (i / N) * W;
+          const u = (x / Math.max(W, 1)) * 2 - 1;
+          const y = model.a + model.b*u + model.c*u*u;
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        if (r2El && now - r2Gate > 250) { r2Gate = now; r2El.textContent = model.r2.toFixed(2); }
+      }
+
+      requestAnimationFrame(frame);
+    }
+    /* No visibilitychange restart: browsers pause and resume the SAME rAF
+       chain in hidden tabs — restarting by hand stacks duplicate loops. */
+    requestAnimationFrame(frame);
+  })();
+
+  /* ---- Boot ---- */
+  function boot() { initReveals(); }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => runLoader(boot));
+  } else {
+    runLoader(boot);
+  }
+})();
+</script>
+</body>
+</html>
