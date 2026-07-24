@@ -24,8 +24,8 @@
 /* ============================================================
    JOE CURRY — Product & data studio
    Racing green · paper · brass. System serif italic × mono.
-   No frameworks, no webfonts. The background is a live model:
-   a weighted least-squares fit through points you scatter.
+   No frameworks, no webfonts. The background is a live signal
+   surface: quiet at rest, tactile under pointer or touch.
    ============================================================ */
 
 /* ---- Tokens ---- */
@@ -67,6 +67,12 @@ body {
   -webkit-font-smoothing: antialiased;
   overflow-x: clip;
 }
+.scroll-root {
+  position: relative;
+  z-index: 1;
+  min-height: 100%;
+}
+[id] { scroll-margin-top: calc(var(--header-h) + 1rem); }
 a { color: inherit; text-decoration: none; }
 ::selection { background: var(--brass); color: var(--felt); }
 :focus-visible { outline: 2px solid var(--brass); outline-offset: 4px; }
@@ -80,15 +86,31 @@ a { color: inherit; text-decoration: none; }
 
 /* ---- The field: fixed canvas behind everything ---- */
 .field {
-  position: fixed; inset: 0; z-index: -1;
+  position: fixed; inset: 0; z-index: 0;
   width: 100%; height: 100%; display: block;
   pointer-events: none;
   transform: translateZ(0);
 }
-/* The large viewport stays stable while mobile browser chrome expands and
-   collapses. That prevents a mid-scroll canvas resize/clear flash. */
-@supports (height: 100lvh) {
-  .field { height: 100lvh; }
+@media (hover: none), (pointer: coarse) {
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    position: fixed;
+    inset: 0;
+  }
+  .scroll-root {
+    position: fixed;
+    inset: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    scroll-behavior: smooth;
+  }
+  .grain { display: none; }
 }
 
 /* ---- Film grain ---- */
@@ -260,8 +282,8 @@ html.no-js .loader { display: none; }
   text-transform: uppercase;
   color: var(--dim);
 }
-/* The HUD (and the studio's model sentence) only appear once the field
-   actually computes a fit — set via .has-field from the field module.
+/* The HUD (and the studio's signal sentence) only appear once the field
+   renderer is ready — set via .has-field from the field module.
    Reduced-motion and no-JS visitors never see "live" claims over a dead canvas. */
 .hero__hud {
   font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.14em;
@@ -276,23 +298,82 @@ html.no-js .loader { display: none; }
 .hero__hud b { color: var(--brass); font-weight: 400; }
 @keyframes livePulse { 0%,100%{ opacity: 1 } 50%{ opacity: 0.35 } }
 @media (max-width: 760px) {
-  .hero { min-height: max(100svh, 44rem); }
+  .hero {
+    min-height: 100svh;
+    justify-content: initial;
+    padding-top: calc(var(--header-h) + 1.45rem);
+    padding-bottom: 1.25rem;
+  }
+  .hero__topline {
+    position: static;
+  }
   .hero__intro {
-    top: calc(var(--header-h) + 5.25rem);
-    left: var(--gutter);
-    right: var(--gutter);
+    position: static;
     width: auto;
     max-width: 27rem;
+    margin-top: clamp(4.5rem, 10svh, 6.5rem);
   }
   .hero__intro-copy { font-size: clamp(1.3rem, 5.8vw, 1.75rem); max-width: 25ch; }
   .hero__actions { margin-top: 1.2rem; }
-  .hero__scope { max-width: 24ch; }
+  .hero__action:not(.hero__action--primary) { display: none; }
+  .hero__wordmark {
+    margin-top: auto;
+    font-size: clamp(5.8rem, 28vw, 8.6rem);
+    line-height: 0.79;
+    letter-spacing: -0.045em;
+  }
+  .hero__foot { display: none; }
 }
 @media (max-width: 420px) {
-  .hero { min-height: max(100svh, 42rem); }
-  .hero__intro { top: calc(var(--header-h) + 4.4rem); }
+  .hero { min-height: 100svh; }
+  .hero__intro { margin-top: clamp(3.8rem, 8svh, 5.2rem); }
   .hero__intro-copy span { margin-top: 0.35em; }
   .hero__actions { gap: 0.45rem 1rem; }
+}
+@media (max-width: 760px) and (max-height: 700px) {
+  .hero__intro { margin-top: clamp(2rem, 6svh, 3.2rem); }
+  .hero__intro-copy span { display: none; }
+  .hero__actions { margin-top: 0.8rem; }
+  .hero__wordmark { font-size: clamp(4.9rem, 24vw, 7rem); }
+}
+@media (hover: none) and (orientation: landscape) and (max-height: 560px),
+       (pointer: coarse) and (orientation: landscape) and (max-height: 560px) {
+  .hero {
+    min-height: 100svh;
+    display: grid;
+    grid-template-columns: minmax(14rem, 0.85fr) 1.15fr;
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    column-gap: clamp(1.5rem, 5vw, 3.5rem);
+    padding-top: calc(var(--header-h) + 0.8rem);
+    padding-bottom: 0.8rem;
+  }
+  .hero__topline {
+    position: static;
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .hero__intro {
+    position: static;
+    grid-column: 1;
+    grid-row: 2;
+    width: auto;
+    margin-top: clamp(1.1rem, 6vh, 2rem);
+  }
+  .hero__intro-copy { font-size: clamp(1.05rem, 3vw, 1.4rem); }
+  .hero__intro-copy span { display: none; }
+  .hero__actions { margin-top: 0.75rem; }
+  .hero__action:not(.hero__action--primary) { display: none; }
+  .hero__wordmark {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: end;
+    margin-top: 0;
+    font-size: clamp(5.2rem, 17vw, 8.7rem);
+    line-height: 0.78;
+    letter-spacing: -0.045em;
+  }
+  .hero__foot { display: none; }
 }
 
 /* ---- Masked line reveal ---- */
@@ -460,6 +541,8 @@ html.no-js .loader { display: none; }
   .js [data-reveal], .js .lm > span { opacity: 1 !important; transform: none !important; }
   .loader, .cursor, .grain, .progress, .field, .marquee { display: none !important; }
   body { background: #fff; color: #111; }
+  html, body { height: auto !important; overflow: visible !important; }
+  .scroll-root { position: static !important; overflow: visible !important; }
   .case__url, .case__badge { background: none; color: #333; border-color: #bbb; }
 }
 
@@ -505,6 +588,7 @@ html.no-js .loader { display: none; }
   </div>
 </header>
 
+<div class="scroll-root" id="scrollRoot">
 <main>
 
   <!-- ===== HERO ===== -->
@@ -528,7 +612,7 @@ html.no-js .loader { display: none; }
     </h1>
     <div class="hero__foot">
       <p class="hero__scope">Strategy · Design · Build · Data · Operation</p>
-      <div class="hero__hud" aria-hidden="true"><span class="dot"></span> Live fit · R² <b id="r2">—</b></div>
+      <div class="hero__hud" aria-hidden="true"><span class="dot"></span> Signal field · live</div>
     </div>
   </section>
 
@@ -637,7 +721,7 @@ html.no-js .loader { display: none; }
       <h2 class="studio__lead"><span class="lm"><span>The whole job,</span></span><span class="lm"><span>one pair of hands.</span></span></h2>
       <div class="studio__body">
         <p data-reveal>I'm Joe Curry — I build web products the whole way through: the idea, the brand, the interface, the data model, the deployment, and the boring-but-vital part where it keeps running every day after launch.</p>
-        <p data-reveal class="studio__note">The background of this page is a live weighted least-squares model — a curve continuously re-fit through drifting data points. With a mouse, you can scatter more. That's the studio in one image: signal from noise, computed in front of you.</p>
+        <p data-reveal class="studio__note">The background is a live signal surface — quiet at rest, responsive to touch, and designed to resolve back to clarity. That’s the studio in one image: input becomes a deliberate, computed response.</p>
         <div class="studio__stats">
           <div data-reveal><div class="stat__n">Start→Run</div><div class="stat__l">Concept through operation</div></div>
           <div data-reveal><div class="stat__n">1 builder</div><div class="stat__l">Direct line, no hand-offs</div></div>
@@ -661,11 +745,14 @@ html.no-js .loader { display: none; }
 <footer class="footer wrap">
   <div class="footer__row">
     <span>© <span id="year">2026</span> Joe Curry</span>
-    <span>Racing green · System serif · Live least squares</span>
+    <span>Racing green · System serif · Interactive signal field</span>
     <a href="#top" data-cursor="TOP">Back to top ↑</a>
   </div>
 </footer>
+</div>
 
+<script src="signal-pool-core.js?v=2"></script>
+<script src="signal-pool.js?v=2"></script>
 <script>
 /* ============================================================
    JOE CURRY — behavior. Independent, feature-gated modules;
@@ -681,6 +768,24 @@ html.no-js .loader { display: none; }
 
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const canHover = matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const scrollRoot = document.getElementById("scrollRoot");
+  const pageScroller = !canHover && scrollRoot ? scrollRoot : null;
+
+  /* Mobile uses an inner native scroller so the fixed signal surface remains
+     continuously composited through iOS momentum. Route hash links to it. */
+  if (pageScroller) {
+    document.addEventListener("click", (event) => {
+      const link = event.target.closest('a[href^="#"]');
+      if (!link) return;
+      const target = document.querySelector(link.getAttribute("href"));
+      if (!target) return;
+      event.preventDefault();
+      target.scrollIntoView({
+        behavior: reduceMotion ? "auto" : "smooth",
+        block: "start"
+      });
+    });
+  }
 
   /* ---- Clock (Eastern) ---- */
   (function clock() {
@@ -740,7 +845,7 @@ html.no-js .loader { display: none; }
         e.target.classList.add("in");
         io.unobserve(e.target);
       });
-    }, { rootMargin: "0px 0px -12% 0px" });
+    }, { root: pageScroller, rootMargin: "0px 0px -12% 0px" });
     rest.forEach((el) => io.observe(el));
   }
 
@@ -781,13 +886,39 @@ html.no-js .loader { display: none; }
     const prog = document.querySelector(".progress");
     const track = document.getElementById("marquee");
     if (reduceMotion) return;
-    let vel = 0, lastY = scrollY, mx = 0, lastT = performance.now();
-    addEventListener("scroll", () => { const y = scrollY; vel = y - lastY; lastY = y; }, { passive: true });
+    const scrollHost = pageScroller || window;
+    const getY = () => pageScroller ? pageScroller.scrollTop : scrollY;
+
+    /* On touch devices, the marquee stays typographically still and progress
+       updates only when scrolling. This leaves the main thread quiet at rest. */
+    if (!canHover) {
+      let progressRaf = 0;
+      const paintProgress = () => {
+        progressRaf = 0;
+        if (!prog) return;
+        const max = pageScroller
+          ? pageScroller.scrollHeight - pageScroller.clientHeight
+          : document.documentElement.scrollHeight - innerHeight;
+        prog.style.transform = "scaleX(" + (max > 0 ? getY() / max : 0) + ")";
+      };
+      const requestProgress = () => {
+        if (!progressRaf) progressRaf = requestAnimationFrame(paintProgress);
+      };
+      scrollHost.addEventListener("scroll", requestProgress, { passive: true });
+      addEventListener("resize", requestProgress, { passive: true });
+      requestProgress();
+      return;
+    }
+
+    let vel = 0, lastY = getY(), mx = 0, lastT = performance.now();
+    scrollHost.addEventListener("scroll", () => { const y = getY(); vel = y - lastY; lastY = y; }, { passive: true });
     function frame(t) {
       const dt = Math.min(t - lastT, 50); lastT = t;
       if (prog) {
-        const max = document.documentElement.scrollHeight - innerHeight;
-        prog.style.transform = "scaleX(" + (max > 0 ? scrollY / max : 0) + ")";
+        const max = pageScroller
+          ? pageScroller.scrollHeight - pageScroller.clientHeight
+          : document.documentElement.scrollHeight - innerHeight;
+        prog.style.transform = "scaleX(" + (max > 0 ? getY() / max : 0) + ")";
       }
       if (track && !track.__filled && track.scrollWidth > 0) {
         /* One copy must span the viewport for the exact-half wrap to be seamless */
@@ -821,6 +952,9 @@ html.no-js .loader { display: none; }
      canvas — the model is the spectacle, not the renderer.
      ========================================================= */
   (function field() {
+    /* The original 2D least-squares study remains here as a code archive.
+       The production surface is now handled by signal-pool.js. */
+    return;
     const canvas = document.querySelector(".field");
     if (!canvas || reduceMotion) return;
     const ctx = canvas.getContext("2d", { alpha: false });
