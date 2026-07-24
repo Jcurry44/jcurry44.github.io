@@ -85,12 +85,20 @@ a { color: inherit; text-decoration: none; }
   pointer-events: none;
   transform: translateZ(0);
 }
+/* The large viewport stays stable while mobile browser chrome expands and
+   collapses. That prevents a mid-scroll canvas resize/clear flash. */
+@supports (height: 100lvh) {
+  .field { height: 100lvh; }
+}
 
 /* ---- Film grain ---- */
 .grain {
   position: fixed; inset: 0; z-index: 9000; pointer-events: none;
   opacity: 0.05; mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+@media (max-width: 760px) {
+  .grain { opacity: 0.025; mix-blend-mode: soft-light; }
 }
 
 /* ---- Cursor (ships hidden; JS reveals on first move) ---- */
@@ -629,7 +637,7 @@ html.no-js .loader { display: none; }
       <h2 class="studio__lead"><span class="lm"><span>The whole job,</span></span><span class="lm"><span>one pair of hands.</span></span></h2>
       <div class="studio__body">
         <p data-reveal>I'm Joe Curry — I build web products the whole way through: the idea, the brand, the interface, the data model, the deployment, and the boring-but-vital part where it keeps running every day after launch.</p>
-        <p data-reveal class="studio__note">The background of this page is a live weighted least-squares model — a curve continuously re-fit through drifting data points, and any you scatter with your pointer. That's the studio in one image: signal from noise, computed in front of you.</p>
+        <p data-reveal class="studio__note">The background of this page is a live weighted least-squares model — a curve continuously re-fit through drifting data points. With a mouse, you can scatter more. That's the studio in one image: signal from noise, computed in front of you.</p>
         <div class="studio__stats">
           <div data-reveal><div class="stat__n">Start→Run</div><div class="stat__l">Concept through operation</div></div>
           <div data-reveal><div class="stat__n">1 builder</div><div class="stat__l">Direct line, no hand-offs</div></div>
@@ -818,29 +826,66 @@ html.no-js .loader { display: none; }
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) { canvas.remove(); return; }
 
-    let W = 0, H = 0, dpr = 1;
+    /* Mobile gets a calmer profile: fewer, softer samples; slower fitting;
+       and no gesture input, so ordinary scrolling never rewrites the model. */
+    const calmField = !canHover || matchMedia("(max-width: 760px)").matches;
+    const pts = [];
+    const MAX_PTS = calmField ? 42 : 150;
+    const LIFE = calmField ? 16000 : 12000;
+    const TAU = calmField ? 9000 : 6000;
+    const FADE_IN = calmField ? 700 : 250;
+    const FADE_OUT = calmField ? 1400 : 600;
+    const AMBIENT_INTERVAL = calmField ? 900 : 650;
+    const AMBIENT_LIMIT = calmField ? 26 : 60;
+    const AMBIENT_NOISE = calmField ? 0.055 : 0.12;
+    const SMOOTHING = calmField ? 540 : 250;
+
+    let W = 0, H = 0, dpr = 1, resizeRaf = 0;
     function resize() {
-      dpr = Math.min(devicePixelRatio || 1, 2);
-      W = canvas.clientWidth || innerWidth;
-      H = canvas.clientHeight || innerHeight;
-      canvas.width = Math.max(1, Math.round(W * dpr));
-      canvas.height = Math.max(1, Math.round(H * dpr));
+      const nextDpr = Math.min(devicePixelRatio || 1, 2);
+      const nextW = Math.max(1, Math.round(canvas.clientWidth || innerWidth));
+      const nextH = Math.max(1, Math.round(canvas.clientHeight || innerHeight));
+      const pixelW = Math.max(1, Math.round(nextW * nextDpr));
+      const pixelH = Math.max(1, Math.round(nextH * nextDpr));
+
+      /* Assigning canvas.width/height clears it. Skip that destructive write
+         when mobile browser chrome fires a resize without changing our field. */
+      if (pixelW === canvas.width && pixelH === canvas.height && nextDpr === dpr) {
+        W = nextW; H = nextH;
+        return;
+      }
+
+      const oldW = W, oldH = H;
+      if (oldW > 0 && oldH > 0 && pts.length) {
+        const sx = nextW / oldW, sy = nextH / oldH;
+        for (let i = 0; i < pts.length; i++) {
+          pts[i].x *= sx;
+          pts[i].y *= sy;
+        }
+      }
+
+      dpr = nextDpr; W = nextW; H = nextH;
+      canvas.width = pixelW;
+      canvas.height = pixelH;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
     }
-    if (typeof ResizeObserver !== "undefined") {
-      new ResizeObserver(() => { if (canvas.clientWidth > 0) resize(); }).observe(canvas);
-    } else { addEventListener("resize", resize); resize(); }
+    function queueResize() {
+      if (resizeRaf) return;
+      resizeRaf = requestAnimationFrame(() => { resizeRaf = 0; resize(); });
+    }
+    addEventListener("resize", queueResize, { passive: true });
+    resize();
 
     /* Points: {x, y (css px), t (born)}. Weight decays with age. */
-    const pts = [];
-    const MAX_PTS = 150, LIFE = 12000, TAU = 6000;
     /* Weight = age decay × fade-in × fade-out. The fades are what keep the
        idle motion liquid: without them each ambient point lands at FULL
        weight (~1.5 jolts/sec) and dies at 13% weight — the curve visibly
        jerks. With them, every arrival and departure is a glide. */
     function weight(p, now) {
       const age = now - p.t;
-      return Math.exp(-age / TAU) * Math.min(age / 250, 1) * Math.min(Math.max((LIFE - age) / 600, 0), 1);
+      return Math.exp(-age / TAU) * Math.min(age / FADE_IN, 1) * Math.min(Math.max((LIFE - age) / FADE_OUT, 0), 1);
     }
     function addPoint(x, y) {
       if (pts.length >= MAX_PTS) pts.shift();
@@ -854,11 +899,21 @@ html.no-js .loader { display: none; }
       const u = x / Math.max(W, 1);
       return H * (0.42 + 0.16 * Math.sin(u * 4.2 + phase) + 0.08 * Math.sin(u * 9.1 - phase * 1.7));
     }
-    let lastAmbient = 0;
+    /* Seed a well-spread, age-staggered fit behind the loader. The line is
+       already coherent when revealed instead of popping in after point four. */
+    const seedNow = performance.now();
+    const seedCount = calmField ? 9 : 11;
+    for (let i = 0; i < seedCount; i++) {
+      const x = ((i + 0.5) / seedCount) * W;
+      const noise = (Math.random() - 0.5) * H * (calmField ? 0.04 : 0.08);
+      pts.push({ x, y: truth(x) + noise, t: seedNow - FADE_IN - (seedCount - 1 - i) * AMBIENT_INTERVAL * 0.7 });
+    }
+    let lastAmbient = seedNow;
 
-    /* Input: cursor scatters points; clicks burst; touch drags scatter */
+    /* Fine-pointer input is playful; coarse pointers stay ambient-only.
+       A touchmove is usually a scroll, not an instruction to distort the fit. */
     let gate = 0;
-    if (canHover) {
+    if (canHover && !calmField) {
       addEventListener("pointermove", (e) => {
         const now = performance.now();
         if (now - gate > 70) { gate = now; addPoint(e.clientX, e.clientY + (Math.random() - 0.5) * 24); }
@@ -867,12 +922,6 @@ html.no-js .loader { display: none; }
         for (let i = 0; i < 10; i++) {
           addPoint(e.clientX + (Math.random() - 0.5) * 120, e.clientY + (Math.random() - 0.5) * 80);
         }
-      }, { passive: true });
-    } else {
-      addEventListener("touchmove", (e) => {
-        const t = e.changedTouches[0]; if (!t) return;
-        const now = performance.now();
-        if (now - gate > 70) { gate = now; addPoint(t.clientX, t.clientY + (Math.random() - 0.5) * 24); }
       }, { passive: true });
     }
 
@@ -915,18 +964,19 @@ html.no-js .loader { display: none; }
       return { a, b, c, r2, ymean };
     }
 
-    const FELT = "#082f22", CREAM = "242, 238, 227", BRASS = "214, 177, 92";
+    const FELT = "#082f22", CREAM = "242, 238, 227";
+    const BRASS = "214, 177, 92", PALE_BRASS = "226, 205, 154";
     let fieldLive = false, r2Gate = 0, disp = null, lastFrameT = 0;
     function frame() {
       const now = performance.now();
       const fdt = lastFrameT ? Math.min(now - lastFrameT, 100) : 16.7; lastFrameT = now;
-      phase = now / 9000;
+      phase = now / (calmField ? 14000 : 9000);
 
       // Ambient sampling keeps the field alive when idle
-      if (now - lastAmbient > 650 && pts.length < 60) {
+      if (now - lastAmbient > AMBIENT_INTERVAL && pts.length < AMBIENT_LIMIT) {
         lastAmbient = now;
         const x = Math.random() * W;
-        addPoint(x, truth(x) + (Math.random() - 0.5) * H * 0.12);
+        addPoint(x, truth(x) + (Math.random() - 0.5) * H * AMBIENT_NOISE);
       }
       while (pts.length && now - pts[0].t > LIFE) pts.shift();
 
@@ -939,12 +989,12 @@ html.no-js .loader { display: none; }
          a canvas that isn't running. */
       if (model && !fieldLive) { fieldLive = true; document.documentElement.classList.add("has-field"); }
 
-      /* Draw a time-smoothed copy of the coefficients (~250ms lag): the fit
+      /* Draw a time-smoothed copy of the coefficients: the fit
          itself steps whenever a point is born or dies; the DRAWN curve glides. */
       if (model) {
         if (!disp) disp = { a: model.a, b: model.b, c: model.c };
         else {
-          const k = 1 - Math.exp(-fdt / 250);
+          const k = 1 - Math.exp(-fdt / SMOOTHING);
           disp.a += (model.a - disp.a) * k;
           disp.b += (model.b - disp.b) * k;
           disp.c += (model.c - disp.c) * k;
@@ -952,7 +1002,7 @@ html.no-js .loader { display: none; }
       }
 
       // Residual whiskers (faint), then points
-      if (disp) {
+      if (disp && !calmField) {
         ctx.lineWidth = 1;
         for (let i = Math.max(0, pts.length - 50); i < pts.length; i++) {
           const p = pts[i];
@@ -965,22 +1015,28 @@ html.no-js .loader { display: none; }
       for (let i = 0; i < pts.length; i++) {
         const p = pts[i];
         const w = weight(p, now);
-        ctx.fillStyle = "rgba(" + CREAM + ", " + (0.55 * w).toFixed(3) + ")";
-        ctx.beginPath(); ctx.arc(p.x, p.y, 1.8, 0, 6.2832); ctx.fill();
+        const alpha = (calmField ? 0.22 : 0.55) * w;
+        ctx.fillStyle = "rgba(" + CREAM + ", " + alpha.toFixed(3) + ")";
+        ctx.beginPath(); ctx.arc(p.x, p.y, calmField ? 1.15 : 1.8, 0, 6.2832); ctx.fill();
       }
 
       // The fitted curve — the brass thread through the noise
       if (disp) {
-        ctx.strokeStyle = "rgba(" + BRASS + ", 0.85)";
-        ctx.lineWidth = 1.6;
         ctx.beginPath();
-        const N = 72;
+        const N = calmField ? 96 : 72;
         for (let i = 0; i <= N; i++) {
           const x = (i / N) * W;
           const u = (x / Math.max(W, 1)) * 2 - 1;
           const y = disp.a + disp.b*u + disp.c*u*u;
           if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
+        if (calmField) {
+          ctx.strokeStyle = "rgba(" + PALE_BRASS + ", 0.10)";
+          ctx.lineWidth = 3.4;
+          ctx.stroke();
+        }
+        ctx.strokeStyle = "rgba(" + (calmField ? PALE_BRASS : BRASS) + ", " + (calmField ? "0.68" : "0.85") + ")";
+        ctx.lineWidth = calmField ? 1.25 : 1.6;
         ctx.stroke();
         if (model && r2El && now - r2Gate > 250) { r2Gate = now; r2El.textContent = model.r2.toFixed(2); }
       }
