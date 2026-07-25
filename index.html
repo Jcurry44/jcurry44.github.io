@@ -73,6 +73,9 @@ body {
   min-height: 100%;
 }
 [id] { scroll-margin-top: calc(var(--header-h) + 1rem); }
+/* Focusables need it too — tabbing to a link near a section top otherwise
+   scrolls it under the fixed header, where the focus ring is invisible. */
+a, button, input, textarea, select, [tabindex] { scroll-margin-top: calc(var(--header-h) + 1rem); }
 a { color: inherit; text-decoration: none; }
 ::selection { background: var(--brass); color: var(--felt); }
 :focus-visible { outline: 2px solid var(--brass); outline-offset: 4px; }
@@ -162,7 +165,13 @@ a { color: inherit; text-decoration: none; }
 .loader__count { font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.2em; margin-top: 1rem; color: var(--dim); text-align: center; }
 .loader__bar { height: 2px; width: min(56vw, 320px); margin: 1.2rem auto 0; background: rgba(242,238,227,0.12); overflow: hidden; }
 .loader__bar i { display: block; height: 100%; width: 0%; background: var(--brass); }
-html.no-js .loader { display: none; }
+/* The curtain must claim the screen BEFORE content paints, or it drops on
+   top of an already-visible page — which is what it did when the only gate
+   was the end-of-body script. A head script adds .curtain instead.
+   Failsafe: if that end-of-body script never runs (so .js never appears),
+   this CSS animation lifts the curtain on its own at 2.6s. No JS path can
+   leave a visitor stuck behind it. */
+html:not(.curtain) .loader { display: none; }
 
 /* ---- Header (strip never intercepts; only links do) ---- */
 .header {
@@ -292,8 +301,14 @@ html.no-js .loader { display: none; }
   visibility: hidden;
 }
 .has-field .hero__hud { visibility: visible; }
-.studio__note { display: none; }
-.has-field .studio__note { display: block; }
+/* Two surfaces, two truthful captions. Nothing shows until a renderer
+   stamps data-field, so no variant can ever describe a dead canvas. */
+.hud--fit, .hud--signal, .studio__note, .colophon-field { display: none; }
+.has-field .colophon-field { display: inline; }
+[data-field="fit"] .hud--fit,
+[data-field="signal"] .hud--signal { display: inline; }
+[data-field="fit"] .studio__note--fit,
+[data-field="signal"] .studio__note--signal { display: block; }
 .hero__hud .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brass); animation: livePulse 2.4s cubic-bezier(0.76,0,0.24,1) infinite; }
 .hero__hud b { color: var(--brass); font-weight: 400; }
 @keyframes livePulse { 0%,100%{ opacity: 1 } 50%{ opacity: 0.35 } }
@@ -479,7 +494,12 @@ html.no-js .loader { display: none; }
   font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.12em;
   text-transform: uppercase; color: rgba(242,238,227,0.62);
 }
+/* inset:0 inside an overflow:hidden tile clips a normal outline away
+   entirely, leaving the largest target on the page with no visible focus.
+   A negative offset draws the ring inside the clip box. */
 .case__media-link { position: absolute; inset: 0; z-index: 1; }
+.case__media-link:focus-visible { outline: 3px solid var(--brass); outline-offset: -6px; }
+.case__name { margin: 0; }
 
 .case__url {
   position: absolute; left: clamp(0.8rem, 1.5vw, 1.1rem); bottom: clamp(0.8rem, 1.5vw, 1.1rem); z-index: 2;
@@ -487,6 +507,9 @@ html.no-js .loader { display: none; }
   font-family: var(--mono); font-size: var(--step--1); color: var(--paper);
   padding: 0.4em 0.8em; border: 1px solid rgba(242, 238, 227, 0.3); border-radius: 100px;
   background: rgba(5, 31, 22, 0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  /* Sits above the full-tile link; without this it is a dead click zone
+     right on the most link-looking element in the tile. */
+  pointer-events: none;
 }
 .case__url i { width: 7px; height: 7px; border-radius: 50%; background: var(--brass); flex: none; animation: livePulse 2.4s cubic-bezier(0.76,0,0.24,1) infinite; }
 .case__badge {
@@ -525,6 +548,27 @@ html.no-js .loader { display: none; }
 .cta__btn .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brass); }
 @media (max-width: 640px) { .cta__btn { width: 100%; justify-content: center; } }
 
+/* Diligence row — the quiet "who am I hiring" line under the CTA.
+   Same mono/underline language as the header nav; no new tokens. */
+.cta__diligence {
+  margin-top: clamp(1.5rem, 3vw, 2.4rem);
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+  gap: 0.5rem clamp(0.9rem, 2vw, 1.6rem);
+  font-family: var(--mono); font-size: var(--step--1);
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint);
+}
+.cta__diligence-lead { color: var(--brass); }
+.cta__diligence a { position: relative; padding-block: 0.25rem; color: var(--dim); }
+.cta__diligence a::after {
+  content: ""; position: absolute; left: 0; bottom: 0; height: 1px; width: 100%;
+  background: currentColor; transform: scaleX(0); transform-origin: 100% 50%;
+  transition: transform 0.45s var(--ease);
+}
+.cta__diligence a:hover { color: var(--paper); }
+.cta__diligence a:hover::after { transform: scaleX(1); transform-origin: 0 50%; }
+/* Pending items read as status, never as a dead link. */
+.cta__diligence .is-pending { color: var(--faint); }
+
 /* ---- Footer ---- */
 .footer { padding-block: clamp(2.5rem, 5vw, 4rem) clamp(1.8rem, 3vw, 2.5rem); border-top: 1px solid var(--line); }
 .footer__row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.08em; color: var(--dim); }
@@ -542,8 +586,16 @@ html.no-js .loader { display: none; }
   .loader, .cursor, .grain, .progress, .field, .marquee { display: none !important; }
   body { background: #fff; color: #111; }
   html, body { height: auto !important; overflow: visible !important; }
+  /* The mobile scroll cage also pins body; without this, printing from a
+     phone emits a single clipped page. */
+  body { position: static !important; inset: auto !important; }
   .scroll-root { position: static !important; overflow: visible !important; }
   .case__url, .case__badge { background: none; color: #333; border-color: #bbb; }
+  /* These two carry hard-coded dark literals that escape the token remap
+     above, so they printed as near-black slabs. */
+  .case__media, .case__media--image, .case__ph { background: #fff !important; }
+  .case__ph b { color: #111 !important; }
+  .case__ph::after { color: #555 !important; }
 }
 
 /* ---- Reduced motion ---- */
@@ -554,9 +606,25 @@ html.no-js .loader { display: none; }
   .field { display: none; }
 }
 </style>
-<!-- The js class is flipped by the body script itself (not here): if that
-     script ever fails to run, the page stays in no-js form — everything
-     visible, loader hidden — instead of a curtain over invisible content. -->
+<!-- The js class is still flipped by the body script (so a dead script leaves
+     everything visible rather than a curtain over hidden content). This only
+     raises the curtain, which the CSS failsafe above can lift without JS. -->
+<script>
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    document.documentElement.classList.add("curtain");
+    /* The watchdog lives HERE, in the head, because this is the only place
+       it cannot be aborted. The body script adds .js as its first statement
+       but nothing lifts the curtain until ~440 lines later — so a single
+       runtime error in between would strand a visitor behind an opaque
+       full-screen panel. A timer set now survives any later exception, and
+       dropping .curtain re-applies `html:not(.curtain) .loader{display:none}`.
+       It also ends the slow-script race: once the curtain is gone it can
+       never re-cover a page the visitor is already reading. */
+    setTimeout(function () {
+      document.documentElement.classList.remove("curtain");
+    }, 3000);
+  }
+</script>
 </head>
 <body>
 
@@ -584,6 +652,7 @@ html.no-js .loader { display: none; }
       </nav>
       <span class="clock" id="clock" aria-hidden="true">--:--:--</span>
       <a href="mailto:jjcurry027@gmail.com" data-cursor="EMAIL">Email</a>
+      <a href="https://www.linkedin.com/in/joseph-curry-940738129/" target="_blank" rel="me noopener" data-cursor="LINKEDIN">LinkedIn</a>
     </div>
   </div>
 </header>
@@ -612,7 +681,11 @@ html.no-js .loader { display: none; }
     </h1>
     <div class="hero__foot">
       <p class="hero__scope">Strategy · Design · Build · Data · Operation</p>
-      <div class="hero__hud" aria-hidden="true"><span class="dot"></span> Signal field · live</div>
+      <div class="hero__hud" aria-hidden="true">
+        <span class="dot"></span>
+        <span class="hud--fit">Live fit · R² <b id="r2">—</b></span>
+        <span class="hud--signal">Signal field · live</span>
+      </div>
     </div>
   </section>
 
@@ -637,11 +710,21 @@ html.no-js .loader { display: none; }
       <article class="case" data-reveal>
         <div class="case__media case__media--image">
           <a class="case__media-link" href="https://jcurry44.github.io/Icenomics" target="_blank" rel="noopener" data-cursor="VISIT" aria-label="Visit Icenomics"></a>
-          <img class="case__image" src="icenomics-banner.png" alt="" loading="lazy" decoding="async" />
-          <a class="case__url" href="https://jcurry44.github.io/Icenomics" target="_blank" rel="noopener" data-cursor="VISIT"><i></i>jcurry44.github.io/Icenomics</a>
+          <!-- 1400x467 with intrinsic dimensions so the tile reserves its box
+               and never shifts layout. Was a 413KB PNG; webp is 19KB. -->
+          <picture>
+            <source srcset="icenomics-banner.webp" type="image/webp" />
+            <img class="case__image" src="icenomics-banner.jpg"
+                 alt="Icenomics — hockey market intelligence"
+                 width="1400" height="467" loading="lazy" decoding="async" />
+          </picture>
+          <!-- Visual affordance only: the full-tile link above already goes
+               here, so exposing this as a second link to the same URL would
+               make a screen reader read the destination twice (WCAG H2). -->
+          <span class="case__url" aria-hidden="true"><i></i>jcurry44.github.io/Icenomics</span>
         </div>
         <div class="case__meta">
-          <span class="case__name">Icenomics</span>
+          <h3 class="case__name">Icenomics</h3>
           <span class="case__role">Concept · Data · Build · Operation</span>
         </div>
         <p class="case__line">A live market-intelligence platform that prices professional hockey contracts: 2,000+ interactive asset pages, forecast models with published accuracy, a what-if trade simulator, and automated daily data operations. Its arbitration forecasts are pre-registered and publicly anchored before the hearings — a data product built end-to-end and run by one person.</p>
@@ -655,7 +738,7 @@ html.no-js .loader { display: none; }
           <span class="case__badge">In owner review</span>
         </div>
         <div class="case__meta">
-          <span class="case__name">Nicastro Accounting</span>
+          <h3 class="case__name">Nicastro Accounting</h3>
           <span class="case__role">Design · Build</span>
         </div>
         <p class="case__line">Site design and build for a Western New York accounting firm: a living-ledger hero, a tax-deadline radar, and a personalized document-checklist builder. A site that works the way the firm does — precise, calm, and useful before the first phone call.</p>
@@ -669,7 +752,7 @@ html.no-js .loader { display: none; }
           <span class="case__badge">In owner review</span>
         </div>
         <div class="case__meta">
-          <span class="case__name">7 Construction</span>
+          <h3 class="case__name">7 Construction</h3>
           <span class="case__role">Design · Build</span>
         </div>
         <p class="case__line">A blueprint-styled site for a family framing company in North Tonawanda: drafting-table aesthetic, a project gallery, and a lead form built for phone-first customers who need a framer, not a brochure.</p>
@@ -721,7 +804,8 @@ html.no-js .loader { display: none; }
       <h2 class="studio__lead"><span class="lm"><span>The whole job,</span></span><span class="lm"><span>one pair of hands.</span></span></h2>
       <div class="studio__body">
         <p data-reveal>I'm Joe Curry — I build web products the whole way through: the idea, the brand, the interface, the data model, the deployment, and the boring-but-vital part where it keeps running every day after launch.</p>
-        <p data-reveal class="studio__note">The background is a live signal surface — quiet at rest, responsive to touch, and designed to resolve back to clarity. That’s the studio in one image: input becomes a deliberate, computed response.</p>
+        <p data-reveal class="studio__note studio__note--fit">The background of this page is a live weighted least-squares model — a curve continuously re-fit through drifting data points, and any you scatter with your pointer. That’s the studio in one image: signal from noise, computed in front of you.</p>
+        <p data-reveal class="studio__note studio__note--signal">The background is a live signal surface — quiet at rest, responsive to touch, and designed to resolve back to clarity. That’s the studio in one image: input becomes a deliberate, computed response.</p>
         <div class="studio__stats">
           <div data-reveal><div class="stat__n">Start→Run</div><div class="stat__l">Concept through operation</div></div>
           <div data-reveal><div class="stat__n">1 builder</div><div class="stat__l">Direct line, no hand-offs</div></div>
@@ -738,6 +822,17 @@ html.no-js .loader { display: none; }
     <a href="mailto:jjcurry027@gmail.com" class="cta__btn" data-cursor="EMAIL">
       <span class="dot"></span> jjcurry027@gmail.com
     </a>
+    <div class="cta__diligence" data-reveal>
+      <span class="cta__diligence-lead">Diligence</span>
+      <a href="https://www.linkedin.com/in/joseph-curry-940738129/" target="_blank" rel="me noopener" data-cursor="LINKEDIN">LinkedIn ↗</a>
+      <!-- RESUME LINK SLOT — PENDING JOE. Putting a PDF in this public repo is his
+           call, so the row currently states availability instead of shipping a dead
+           href ("no link beats a dead one" — the 2026-06-30 resume defect).
+           To activate: copy the chosen resume PDF into the deploy checkout root as
+           joe-curry-resume.pdf, then replace the <span> below with exactly:
+           <a href="joe-curry-resume.pdf" target="_blank" rel="noopener" data-cursor="RESUME">Résumé (PDF) ↗</a> -->
+      <span class="is-pending">Résumé — on request</span>
+    </div>
   </section>
 
 </main>
@@ -745,14 +840,31 @@ html.no-js .loader { display: none; }
 <footer class="footer wrap">
   <div class="footer__row">
     <span>© <span id="year">2026</span> Joe Curry</span>
-    <span>Racing green · System serif · Interactive signal field</span>
+    <span>Racing green · System serif<span class="colophon-field"> · <span class="hud--fit">Live least squares</span><span class="hud--signal">Interactive signal field</span></span></span>
     <a href="#top" data-cursor="TOP">Back to top ↑</a>
   </div>
 </footer>
 </div>
 
-<script src="signal-pool-core.js?v=2"></script>
-<script src="signal-pool.js?v=2"></script>
+<script>
+  /* ============================================================
+     FIELD ROUTING — decided once, before either renderer loads.
+       fit    → the live weighted least-squares model (desktop).
+                This is the studio's actual argument: a real model
+                computed in front of you, fed by your pointer.
+       signal → the WebGL signal surface (touch). Cheaper, calmer,
+                and honest on a device with no cursor to scatter
+                points with.
+       none   → reduced motion. Neither runs; the page is complete.
+     Exactly one renderer ever owns the single .field canvas. Each
+     one stamps data-field on <html> so the copy can tell the truth
+     about whichever surface the visitor actually has. */
+  window.__FIELD_MODE__ = matchMedia("(prefers-reduced-motion: reduce)").matches
+    ? "none"
+    : (matchMedia("(hover: hover) and (pointer: fine)").matches ? "fit" : "signal");
+</script>
+<script src="signal-pool-core.js?v=3"></script>
+<script src="signal-pool.js?v=3"></script>
 <script>
 /* ============================================================
    JOE CURRY — behavior. Independent, feature-gated modules;
@@ -808,15 +920,24 @@ html.no-js .loader { display: none; }
     const count = document.getElementById("loaderCount");
     const bar = document.getElementById("loaderBar");
     let finished = false;
+    /* Removing .curtain also disarms the head watchdog — but only once the
+       slide has played, since .curtain is what keeps the loader displayed. */
+    function retire() {
+      loader.classList.add("is-done");
+      document.documentElement.classList.remove("curtain");
+    }
     function finish() {
       if (finished) return; finished = true;
       loader.classList.add("is-leaving");
-      loader.addEventListener("transitionend", () => loader.classList.add("is-done"), { once: true });
-      setTimeout(() => loader.classList.add("is-done"), 1200);
+      loader.addEventListener("transitionend", retire, { once: true });
+      setTimeout(retire, 1200);
       done();
     }
-    setTimeout(finish, 2600);
-    const t0 = performance.now(), DUR = 900;
+    setTimeout(finish, 2200);
+    /* 560ms, not 900: a prospective client should not wait on theater. The
+       curtain now also starts covering from first paint, so the total time
+       to a usable page dropped rather than moved. */
+    const t0 = performance.now(), DUR = 560;
     (function step(now) {
       const p = Math.min((now - t0) / DUR, 1);
       const eased = 1 - Math.pow(1 - p, 3);
@@ -824,7 +945,7 @@ html.no-js .loader { display: none; }
       count.textContent = String(n).padStart(3, "0");
       bar.style.width = n + "%";
       if (p < 1) return requestAnimationFrame(step);
-      setTimeout(finish, 120);
+      setTimeout(finish, 60);
     })(t0);
   }
 
@@ -834,7 +955,7 @@ html.no-js .loader { display: none; }
       setTimeout(() => lm.classList.add("in"), 80 + i * 130);
     });
     document.querySelectorAll(".hero [data-reveal]").forEach((el, i) => {
-      setTimeout(() => el.classList.add("in"), 450 + i * 120);
+      setTimeout(() => el.classList.add("in"), 260 + i * 90);
     });
     const rest = [...document.querySelectorAll("[data-reveal], .lm")]
       .filter((el) => !el.closest(".hero") && !el.closest("#wordmark"));
@@ -952,16 +1073,20 @@ html.no-js .loader { display: none; }
      canvas — the model is the spectacle, not the renderer.
      ========================================================= */
   (function field() {
-    /* The original 2D least-squares study remains here as a code archive.
-       The production surface is now handled by signal-pool.js. */
-    return;
+    /* Desktop surface. Runs only when the router picked "fit" — on touch,
+       signal-pool.js owns this same canvas instead. */
+    if (window.__FIELD_MODE__ !== "fit") return;
     const canvas = document.querySelector(".field");
     if (!canvas || reduceMotion) return;
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) { canvas.remove(); return; }
 
-    /* Mobile gets a calmer profile: fewer, softer samples; slower fitting;
-       and no gesture input, so ordinary scrolling never rewrites the model. */
+    /* Declared up here so the synchronous first paint below can use FELT. */
+    const FELT = "#082f22", CREAM = "242, 238, 227";
+    const BRASS = "214, 177, 92", PALE_BRASS = "226, 205, 154";
+
+    /* Retained from the touch profile: if this ever runs on a narrow
+       fine-pointer window, fit calmly rather than at full density. */
     const calmField = !canHover || matchMedia("(max-width: 760px)").matches;
     const pts = [];
     const MAX_PTS = calmField ? 42 : 150;
@@ -1005,12 +1130,23 @@ html.no-js .loader { display: none; }
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
     }
+    /* ResizeObserver, not just the window resize event: the canvas can gain
+       or change size without the WINDOW resizing (a pane opening, devtools
+       docking, a first layout after a hidden render). Without this the
+       backing store stays 1x1 and the field silently never paints. */
     function queueResize() {
       if (resizeRaf) return;
       resizeRaf = requestAnimationFrame(() => { resizeRaf = 0; resize(); });
     }
     addEventListener("resize", queueResize, { passive: true });
+    if (typeof ResizeObserver !== "undefined") new ResizeObserver(queueResize).observe(canvas);
     resize();
+    /* Paint the ground synchronously, before the first animation frame. An
+       alpha:false canvas starts OPAQUE BLACK, and rAF does not run while a
+       tab is backgrounded — so a page opened in a background tab and later
+       focused would show a black slab where the racing green should be. */
+    ctx.fillStyle = FELT;
+    ctx.fillRect(0, 0, W + 2, H + 2);
 
     /* Points: {x, y (css px), t (born)}. Weight decays with age. */
     /* Weight = age decay × fade-in × fade-out. The fades are what keep the
@@ -1098,10 +1234,25 @@ html.no-js .loader { display: none; }
       return { a, b, c, r2, ymean };
     }
 
-    const FELT = "#082f22", CREAM = "242, 238, 227";
-    const BRASS = "214, 177, 92", PALE_BRASS = "226, 205, 154";
     let fieldLive = false, r2Gate = 0, disp = null, lastFrameT = 0;
+
+    /* Reduced motion can be switched on mid-session. Without this the loop
+       kept drawing 60fps into a display:none canvas while the HUD and studio
+       copy went on advertising a live model — the exact thing the gating
+       exists to prevent. Mirrors the signal path's handler. */
+    let stopped = false;
+    const fitMotionQuery = matchMedia("(prefers-reduced-motion: reduce)");
+    const onFitMotionChange = (event) => {
+      if (!event.matches || stopped) return;
+      stopped = true;
+      document.documentElement.classList.remove("has-field");
+      document.documentElement.removeAttribute("data-field");
+    };
+    if (typeof fitMotionQuery.addEventListener === "function") fitMotionQuery.addEventListener("change", onFitMotionChange);
+    else if (typeof fitMotionQuery.addListener === "function") fitMotionQuery.addListener(onFitMotionChange);
+
     function frame() {
+      if (stopped) return;
       const now = performance.now();
       const fdt = lastFrameT ? Math.min(now - lastFrameT, 100) : 16.7; lastFrameT = now;
       phase = now / (calmField ? 14000 : 9000);
@@ -1121,7 +1272,11 @@ html.no-js .loader { display: none; }
       /* The HUD and the "live model" copy only appear once a fit actually
          exists — reduced-motion / no-JS visitors never read claims about
          a canvas that isn't running. */
-      if (model && !fieldLive) { fieldLive = true; document.documentElement.classList.add("has-field"); }
+      if (model && !fieldLive) {
+        fieldLive = true;
+        document.documentElement.classList.add("has-field");
+        document.documentElement.setAttribute("data-field", "fit");
+      }
 
       /* Draw a time-smoothed copy of the coefficients: the fit
          itself steps whenever a point is born or dies; the DRAWN curve glides. */

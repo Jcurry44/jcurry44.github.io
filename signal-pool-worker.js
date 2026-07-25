@@ -1,5 +1,8 @@
 /* Liquid signal field — OffscreenCanvas worker */
-importScripts("signal-pool-core.js?v=1");
+/* Version must match the tags in index.html: the worker fetches this file
+   under its own cache key, so a mismatch downloads the core twice and can
+   run a different build here than on the main thread. */
+importScripts("signal-pool-core.js?v=3");
 
 let pool = null;
 let running = false;
@@ -67,6 +70,42 @@ self.onmessage = (event) => {
       self.postMessage({ type: "fail" });
       return;
     }
+
+    /* Context loss is routine — GPU driver resets, Android backgrounding,
+       the process recycling under memory pressure. The context is created
+       with alpha:false, so a lost drawing buffer composites as OPAQUE BLACK
+       across this fixed full-viewport canvas. Without this handler the main
+       thread never learns, keeps the "live" badge up, and the page shows a
+       black slab for the rest of the session. preventDefault() is what makes
+       the context restorable at all. */
+    try {
+      message.canvas.addEventListener("webglcontextlost", function (event) {
+        event.preventDefault();
+        stop();
+        /* Null the pool too: the `if (!pool) return` gate below is what stops
+           incoming drops/resizes from calling into a dead GL context and
+           waking the loop again. */
+        pool = null;
+        self.postMessage({ type: "lost" });
+      });
+      message.canvas.addEventListener("webglcontextrestored", function () {
+        try {
+          var restored = message.canvas.getContext("webgl2", {
+            alpha: false, antialias: false, depth: false, stencil: false,
+            powerPreference: "high-performance"
+          });
+          pool = restored && typeof createSignalPool === "function"
+            ? createSignalPool(restored, message.options || {})
+            : null;
+        } catch (_) {
+          pool = null;
+        }
+        if (!pool) { self.postMessage({ type: "fail" }); return; }
+        pool.resize(cssWidth, cssHeight, dpr);
+        wake();
+        self.postMessage({ type: "ready" });
+      });
+    } catch (_) { /* an engine without listener support still gets the fail path */ }
 
     pool.resize(cssWidth, cssHeight, dpr);
     pool.splat(0.68, 0.72, 0.26);

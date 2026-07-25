@@ -10,10 +10,23 @@
   var field = document.querySelector(".field");
   var motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-  if (!field || motionQuery.matches) {
+  /* The router in index.html owns the decision. On desktop it picks "fit"
+     and the inline least-squares module takes this same canvas, so we must
+     not touch it. */
+  if (!field || motionQuery.matches || window.__FIELD_MODE__ !== "signal") {
     root.classList.remove("has-field");
     return;
   }
+
+  /* Reduced motion can be switched on mid-session (OS setting, or a device
+     entering battery saver). Sampling it only at load left a pulsing "live"
+     badge over a canvas the user just asked to stop. */
+  var onMotionChange = function (event) {
+    if (!event.matches) return;
+    try { makeStatic(); } catch (_) {}
+  };
+  if (typeof motionQuery.addEventListener === "function") motionQuery.addEventListener("change", onMotionChange);
+  else if (typeof motionQuery.addListener === "function") motionQuery.addListener(onMotionChange);
 
   var OPTIONS = {
     dprCap: 1.5,
@@ -218,11 +231,14 @@
         var now = performance.now();
         var point = pointFromClient(event.clientX, event.clientY);
         if (!point) return;
+        /* Measure travel since the last EMITTED drop, not the last event:
+           updating the anchor on every event meant slow, deliberate motion
+           never accumulated the 9px threshold and produced nothing at all. */
         var moved = lastPointer
           ? Math.hypot(point.clientX - lastPointer.clientX, point.clientY - lastPointer.clientY)
           : Infinity;
-        lastPointer = point;
         if (now - lastPointerWake < 46 || moved < 9) return;
+        lastPointer = point;
         lastPointerWake = now;
         emitDrops([[point.x, point.y, 0.028]]);
       }, { passive: true });
@@ -259,6 +275,7 @@
     staticFallback = false;
     field.style.removeProperty("display");
     root.classList.add("has-field");
+    root.setAttribute("data-field", "signal");
     observeField();
     bindControls();
     scheduleResize();
@@ -269,6 +286,7 @@
     if (driver) driver.pause();
     driver = null;
     root.classList.remove("has-field");
+    root.removeAttribute("data-field");   /* the copy must stop claiming a live surface */
     if (observer) observer.disconnect();
     field.style.display = "none";
   }
@@ -365,7 +383,7 @@
     var worker = null;
     var offscreen = null;
     try {
-      worker = new Worker("signal-pool-worker.js?v=1");
+      worker = new Worker("signal-pool-worker.js?v=3");
       offscreen = canvas.transferControlToOffscreen();
     } catch (_) {
       if (worker) worker.terminate();
@@ -375,6 +393,7 @@
     var failed = false;
     var ready = false;
     var readyTimer = 0;
+    var lostTimer = 0;
     var workerDriver = {
       resize: function (width, height, dpr) {
         worker.postMessage({ type: "resize", width: width, height: height, dpr: dpr });
@@ -397,6 +416,7 @@
       if (failed) return;
       failed = true;
       clearTimeout(readyTimer);
+      clearTimeout(lostTimer);
       worker.terminate();
       if (driver === workerDriver) driver = null;
       root.classList.remove("has-field");
@@ -407,12 +427,33 @@
     worker.onmessage = function (event) {
       var message = event.data || {};
       if (message.type === "ready" && !failed) {
+        /* Never re-arm into a state the user asked to stop: a restore (or a
+           slow first init) can land after reduced motion was switched on. */
+        if (motionQuery.matches) { makeStatic(); return; }
         ready = true;
         clearTimeout(readyTimer);
+        clearTimeout(lostTimer);
         driver = workerDriver;
         markReady();
       } else if (message.type === "fail") {
         fallBack();
+      } else if (message.type === "lost" && !failed) {
+        /* Context lost but restorable. Presentation AND state both have to
+           stand down: without clearing the driver, every pointer/scroll event
+           kept posting drops and waking a 60fps loop that rendered into a
+           dead context behind a hidden canvas. Guarded on !failed because a
+           late "lost" must not strip the live claim off a main-thread
+           renderer that fallBack() already started. */
+        root.classList.remove("has-field");
+        root.removeAttribute("data-field");
+        field.style.display = "none";
+        if (driver) driver.pause();
+        driver = null;
+        if (observer) observer.disconnect();
+        /* A loss that never restores must still degrade, like every other
+           failure path does. */
+        clearTimeout(lostTimer);
+        lostTimer = setTimeout(function () { if (!failed) fallBack(); }, 4000);
       }
     };
 
