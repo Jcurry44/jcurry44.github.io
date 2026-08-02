@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>The Practice Intelligence Layer — a briefing</title>
+<style>
+:root{--paper:#f6f4ef;--card:#fffdfa;--ink:#16181d;--muted:#6c7079;--faint:#93979f;
+  --rule:#e0dbd0;--strong:#cdc6b7;--navy:#1b3a5c;--amber:#c07a24;--ok:#1c6b47;--ok-soft:#e3f0e9;
+  --desk:#e9e3d5}
+*{box-sizing:border-box}
+html{border-top:5px solid var(--navy);background:var(--desk)}
+body{margin:0;background:var(--desk);color:var(--ink);
+  font:13.5px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.num{font-family:ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+.page{max-width:820px;margin:26px auto 48px;padding:34px 42px 36px;background:var(--paper);
+  border-radius:3px;box-shadow:0 0 0 1px var(--strong),0 26px 70px -32px rgba(20,18,10,.45)}
+@media (max-width:700px){.page{margin:0;border-radius:0;box-shadow:none;padding:26px 20px 36px}}
+
+.mast{display:flex;align-items:baseline;gap:14px;border-bottom:3px double var(--strong);
+  padding-bottom:11px;flex-wrap:wrap}
+.mark{font:600 21px/1 ui-serif,Georgia,serif}.mark span{color:var(--navy)}
+.mast .who{margin-left:auto;font-size:12px;color:var(--muted)}
+h1{font:600 25px/1.25 ui-serif,Georgia,serif;margin:18px 0 6px;letter-spacing:.1px}
+.lede{color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 16px;max-width:74ch}
+.lede b{color:var(--ink);font-weight:600}
+
+h2{font:600 10.5px/1 system-ui;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);
+  margin:20px 0 9px;display:flex;gap:10px;align-items:center}
+h2::after{content:'';flex:1;height:1px;background:var(--rule)}
+
+.flow{display:grid;grid-template-columns:auto 1fr;gap:7px 12px;margin:0 0 4px}
+.flow .tag{font:700 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.1em;padding:4px 7px;
+  border-radius:4px;align-self:start;margin-top:1px;white-space:nowrap}
+.flow .t-now{background:#eee9dd;color:var(--muted)}
+.flow .t-new{background:var(--navy);color:#f6f4ef}
+.flow .steps{font-size:13px;color:var(--muted)}
+.flow .steps b{color:var(--ink);font-weight:600}
+.flow .steps .sep{color:var(--strong);padding:0 4px}
+
+.gate{border:1.5px solid var(--navy);border-radius:8px;background:var(--card);
+  padding:14px 17px 13px;margin:14px 0 0}
+.gate .gk{font:700 10.5px/1 system-ui;letter-spacing:.12em;text-transform:uppercase;color:var(--navy);margin:0 0 6px}
+.gate .big{font:600 16.5px/1.35 ui-serif,Georgia,serif;margin:0 0 7px}
+.gate p{font-size:12.5px;color:var(--muted);margin:0 0 8px;line-height:1.55}
+.gate p b{color:var(--ink);font-weight:600}
+.gateline{font-size:11.5px;background:var(--ok-soft);color:var(--ok);border:1px solid
+  color-mix(in srgb,var(--ok) 35%,transparent);border-radius:6px;padding:7px 11px;margin:2px 0 6px}
+.gate .same{font-size:12.5px;color:var(--ink);margin:0;font-style:italic}
+
+.phases{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media (max-width:700px){.phases{grid-template-columns:1fr}}
+.ph{background:var(--card);border:1px solid var(--strong);border-radius:8px;padding:12px 14px 11px}
+.ph .no{font:700 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.12em;color:var(--amber);margin:0 0 5px}
+.ph h3{font:600 14.5px/1.3 ui-serif,Georgia,serif;margin:0 0 6px}
+.ph p{font-size:12px;color:var(--muted);margin:0;line-height:1.55}
+.ph p b{color:var(--ink);font-weight:600}
+.ph .pin{margin-top:7px;font-size:11.5px;color:var(--navy);font-weight:600}
+
+.sec{background:var(--card);border:1px solid var(--strong);border-radius:8px;padding:12px 15px;margin:0}
+.sec p{font-size:12.5px;color:var(--muted);margin:0;line-height:1.6}
+.sec p b{color:var(--ink);font-weight:600}
+
+.foot{display:flex;gap:22px;flex-wrap:wrap;border-top:3px double var(--strong);margin-top:18px;padding-top:11px}
+.foot div{font-size:12px;color:var(--muted);max-width:32ch}
+.foot em{font-style:normal;display:block;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--faint);font-weight:700;margin-bottom:2px}
+.foot b{color:var(--ink)}
+.foot .by{margin-left:auto;text-align:right;max-width:none}
+
+.toolbar{max-width:820px;margin:14px auto -14px;padding:0 4px;display:flex;justify-content:flex-end}
+.toolbar button{font:600 12px/1 system-ui;padding:8px 16px;border:1px solid var(--strong);
+  border-radius:99px;background:var(--card);color:var(--muted);cursor:pointer}
+.toolbar button:hover{color:var(--ink);border-color:var(--navy)}
+
+@media print{
+  @page{size:letter;margin:.4in}
+  html{border-top:0;background:#fff}body{background:#fff;font-size:11.5px;line-height:1.42}
+  .page{margin:0;padding:0;max-width:none;box-shadow:none;border-radius:0}
+  .toolbar{display:none}
+  .mast{padding-bottom:8px}.mark{font-size:18px}
+  h1{font-size:20px;margin:11px 0 4px}
+  .lede{font-size:12px;margin-bottom:9px;line-height:1.5}
+  h2{margin:12px 0 6px}
+  .flow{gap:4px 10px}.flow .steps{font-size:11.5px}
+  .gate{padding:9px 12px 8px;margin-top:10px}
+  .gate .big{font-size:14.5px;margin-bottom:5px}
+  .gate p{font-size:11px;margin-bottom:5px;line-height:1.45}
+  .gateline{font-size:10px;padding:5px 9px;margin:2px 0 4px}
+  .gate .same{font-size:11px}
+  .phases{gap:8px}.ph{padding:8px 10px 8px}
+  .ph h3{font-size:12.5px;margin-bottom:4px}
+  .ph p{font-size:10.5px;line-height:1.45}.ph .pin{font-size:10px;margin-top:4px}
+  .sec{padding:8px 11px}.sec p{font-size:11px;line-height:1.5}
+  .foot{margin-top:11px;padding-top:8px;gap:18px}.foot div{font-size:10.5px}
+  .gate,.ph,.sec,.foot{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar"><button type="button" onclick="window.print()">Print / save as PDF</button></div>
+
+<div class="page">
+  <div class="mast">
+    <div class="mark">Curry <span>Studio</span></div>
+    <div class="who">Briefing · prepared for the Nicastro practice · July 2026</div>
+  </div>
+
+  <h1>The practice intelligence layer</h1>
+  <p class="lede">Not software that does taxes. A system that prepares every engagement
+    <b>before judgment begins</b> — what changed, what&rsquo;s missing, what to ask — with every
+    number linked to the exact source page it came from. The accountant reviews, decides,
+    and signs. Always.</p>
+
+  <h2>The bottleneck is intake and reconciliation — not judgment</h2>
+  <div class="flow">
+    <span class="tag t-now">TODAY</span>
+    <span class="steps">Documents trickle in<span class="sep">·</span>someone pulls last
+      year&rsquo;s file<span class="sep">·</span>checks it line by line<span class="sep">·</span>emails
+      for what&rsquo;s missing<span class="sep">·</span>waits<span class="sep">·</span><b>then the real
+      work starts</b></span>
+    <span class="tag t-new">WITH&nbsp;THE&nbsp;LAYER</span>
+    <span class="steps">Documents land where they already do (TaxDome)<span class="sep">·</span>parsed
+      and <b>reconciled against their own printed totals</b><span class="sep">·</span>a one-page briefing:
+      changes, gaps, questions<span class="sep">·</span><b>the accountant starts at the review</b></span>
+  </div>
+
+  <div class="gate">
+    <div class="gk">The rule that makes it trustworthy</div>
+    <div class="big">Nothing publishes unless it ties out.</div>
+    <p>If a document&rsquo;s numbers fail to reconcile against its own printed control totals, the build
+      halts and no report exists. This is not a promise — it is <b>running in production today</b>:
+      Public Ledger reads the City of North Tonawanda&rsquo;s published warrant PDFs — <b>36 of 36</b>
+      machine-readable documents reconciled to the penny, <span class="num">8,532</span> line items,
+      <span class="num">$28.1M</span> — and cannot show a number that failed its own check.</p>
+    <div class="gateline num">&#10003; ALL GATES PASS: name fidelity &middot; expenditure tie-out &middot;
+      row count &middot; list amount &nbsp;<span style="opacity:.7">— actual output of the last build</span></div>
+    <p class="same">A bank statement prints its balances. A transcript prints its totals. Last year&rsquo;s
+      return is the baseline. Same gate, different letterhead.</p>
+  </div>
+
+  <h2>The plan — each phase its own win</h2>
+  <div class="phases">
+    <div class="ph">
+      <div class="no">01 · NOW &rarr; DECEMBER</div>
+      <h3>Bookkeeping pilot</h3>
+      <p>Five friendly clients. Bank and card statements in, <b>reconciled to their own printed
+        balances</b>, a monthly exception brief out: uncategorized items, anomalies against that
+        client&rsquo;s own history, missing documents.</p>
+      <p class="pin">Measured in minutes saved per close — proven before tax season opens.</p>
+    </div>
+    <div class="ph">
+      <div class="no">02 · JANUARY &rarr; APRIL</div>
+      <h3>Tax review assist</h3>
+      <p>A one-page briefing per return, before review: <b>prior-year deltas</b>, a
+        missing-document checklist (IRS transcript diff for extensions), flags with links to source
+        pages. Extraction stays commodity — GruntWorx, SurePrep, or the software&rsquo;s own scan.</p>
+      <p class="pin">The gate and the briefing are ours.</p>
+    </div>
+    <div class="ph">
+      <div class="no">03 · LATER</div>
+      <h3>Buy, don&rsquo;t build</h3>
+      <p>Intake stays in <b>TaxDome</b> — clients already live there. Document OCR is bought, never
+        rebuilt. No new portal, no tax engine, no rip-and-replace.</p>
+      <p class="pin">The layer enhances the tools the practice already trusts.</p>
+    </div>
+  </div>
+
+  <h2>Built to the practice&rsquo;s own obligations</h2>
+  <div class="sec">
+    <p><b>IRC &sect;7216</b> — return information is criminally protected: processing runs on a machine
+      in the office, and nothing reaches any third-party model without written consent and
+      zero-retention terms. <b>FTC Safeguards Rule</b> — the firm&rsquo;s written security plan
+      (IRS Pub&nbsp;4557) is the design document: encryption, access controls, an audit log for every
+      action, explicit deletion. And <b>every extracted number carries a link to its exact source
+      page</b>, so review is fast and human judgment stays in charge.</p>
+  </div>
+
+  <div class="foot">
+    <div><em>Success metric</em><b>30&ndash;60 minutes returned per engagement</b> — measured,
+      not estimated.</div>
+    <div><em>First step</em>One friendly client&rsquo;s last three bank statements, with written
+      consent. <b>Two weeks later: the reconciled brief.</b></div>
+    <div class="by"><em>Prepared by</em><b>Joe Curry</b> · Curry Studio<br>
+      demo: jcurry44.github.io/public-ledger</div>
+  </div>
+</div>
+
+</body>
+</html>
