@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Statement Brief — one statement in, one reconciled brief out</title>
+<style>
+:root{--desk:#e9e3d5;--paper:#f6f2e6;--card:#fdfbf4;--ink:#20242a;--soft:#5f636b;--faint:#8f938f;
+  --line:#d5cdb6;--strong:#c2b998;--navy:#1b3a5c;--brass:#a07620;--gate:#2e6b4f;--gatebg:#e2efe6;
+  --flag:#a33b2e;--flagbg:#f6e3dd;--chip:#ece5d2}
+@media (prefers-color-scheme: dark){:root:where(:not([data-theme="light"])){
+  --desk:#0b0d10;--paper:#14171c;--card:#191d23;--ink:#e6dfcf;--soft:#a09a8d;--faint:#7c7a72;
+  --line:#343941;--strong:#454b55;--navy:#8fb3d9;--brass:#d6b15c;--gate:#67b18d;--gatebg:#1b2b22;
+  --flag:#d8826f;--flagbg:#33211d;--chip:#22262d}}
+*{box-sizing:border-box}
+html{border-top:5px solid var(--navy)}
+body{margin:0;background:var(--desk);color:var(--ink);
+  font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.num{font-family:ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+.wrap{max-width:880px;margin:0 auto;padding:22px 16px 60px}
+
+/* ---------- screen chrome ---------- */
+.bar{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.mark{font:600 20px/1 ui-serif,Georgia,serif}.mark span{color:var(--navy)}
+.bar .tag{font-size:12px;color:var(--soft)}
+.bar .btns{margin-left:auto;display:flex;gap:7px;flex-wrap:wrap}
+button{font:600 12px/1 system-ui;padding:8px 14px;border:1px solid var(--strong);border-radius:99px;
+  background:var(--card);color:var(--soft);cursor:pointer}
+button:hover{color:var(--ink);border-color:var(--navy)}
+button.primary{background:var(--navy);border-color:var(--navy);color:#f6f2e6}
+button.primary:hover{color:#fff}
+.privacy{font-size:12px;color:var(--faint);margin:2px 0 16px}
+.privacy b{color:var(--gate);font-weight:600}
+
+.intake{background:var(--card);border:1px solid var(--strong);border-radius:10px;padding:16px 18px;margin-bottom:14px}
+.intake h2{font:600 10.5px/1 system-ui;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);margin:0 0 10px}
+.igrid{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+@media(max-width:720px){.igrid{grid-template-columns:1fr}}
+textarea{width:100%;height:120px;background:var(--paper);border:1px dashed var(--strong);border-radius:8px;
+  color:var(--ink);font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;padding:10px;resize:vertical}
+textarea:focus{outline:2px solid var(--brass)}
+.ctl{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.ctl label{display:block}
+.ctl em{font-style:normal;display:block;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--faint);font-weight:700;margin-bottom:3px}
+.ctl input{width:100%;background:var(--paper);border:1px solid var(--strong);border-radius:6px;
+  color:var(--ink);font:600 14px ui-monospace,Menlo,Consolas,monospace;padding:7px 9px}
+.ctl input:focus{outline:2px solid var(--brass)}
+.ctl .hint{grid-column:1/-1;font-size:11.5px;color:var(--faint)}
+.mapline{margin-top:9px;font-size:12px;color:var(--soft)}
+.mapline b{color:var(--ink)}
+
+/* ---------- gateline ---------- */
+.gateline{border-radius:8px;padding:13px 17px;margin:0 0 18px;font:600 14px/1.45 ui-monospace,Menlo,Consolas,monospace;
+  display:none}
+.gateline.tie{display:block;background:var(--gatebg);color:var(--gate);
+  border:1.5px solid color-mix(in srgb,var(--gate) 45%,transparent)}
+.gateline.halt{display:block;background:var(--flagbg);color:var(--flag);
+  border:1.5px solid color-mix(in srgb,var(--flag) 45%,transparent)}
+.gateline small{display:block;font:400 11.5px/1.5 system-ui;margin-top:4px;opacity:.85}
+
+/* ---------- the brief (print region) ---------- */
+.folio{background:var(--paper);border-radius:3px;padding:34px 40px 30px;
+  box-shadow:0 0 0 1px var(--strong),0 26px 70px -32px rgba(20,18,10,.4);display:none}
+.folio.on{display:block}
+@media(max-width:720px){.folio{padding:24px 18px}}
+.f-mast{display:flex;align-items:baseline;gap:12px;border-bottom:3px double var(--strong);
+  padding-bottom:10px;flex-wrap:wrap}
+.f-eyebrow{font:700 10px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.14em;color:var(--brass)}
+.f-mast .co{margin-left:auto;font-size:12px;color:var(--soft);text-align:right}
+h1{font:600 24px/1.2 ui-serif,Georgia,serif;margin:14px 0 2px}
+.period{font-size:12.5px;color:var(--soft);margin:0 0 16px}
+.sample-band{margin:12px 0 0;font:700 10.5px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.1em;
+  color:var(--flag);background:var(--flagbg);border-radius:5px;padding:7px 10px;display:inline-block}
+
+.tally{max-width:460px;margin:6px 0 4px}
+.trow{display:flex;justify-content:space-between;gap:14px;padding:5px 0;font-size:14px}
+.trow .l{font-family:ui-serif,Georgia,serif;font-style:italic}
+.trow .v{font:600 14px ui-monospace,Menlo,Consolas,monospace}
+.tnet{border-top:1px solid var(--ink);margin-top:3px;padding:8px 0 9px;display:flex;
+  justify-content:space-between;gap:14px;border-bottom:3px double var(--ink)}
+.tnet .l{font:600 15px ui-serif,Georgia,serif;font-style:italic}
+.tnet .v{font:700 19px ui-monospace,Menlo,Consolas,monospace}
+.stamp{display:inline-block;margin:10px 0 0;font:700 10.5px/1 ui-monospace,Menlo,Consolas,monospace;
+  letter-spacing:.1em;color:var(--gate);background:var(--gatebg);border-radius:5px;padding:7px 10px}
+
+h2.sched{font:600 10.5px/1 system-ui;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);
+  margin:26px 0 10px;display:flex;gap:10px;align-items:center}
+h2.sched::after{content:'';flex:1;height:1px;background:var(--line)}
+
+.flags{display:grid;gap:9px}
+.flag{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:11px 14px;position:relative}
+.flag .key{position:absolute;top:10px;right:13px;font:700 16px ui-monospace,Menlo,Consolas,monospace;color:var(--flag)}
+.flag h3{margin:0;font:600 14px/1.3 ui-serif,Georgia,serif;padding-right:110px}
+.flag p{margin:4px 0 0;font-size:12.5px;color:var(--soft);max-width:66ch}
+.flag p b{color:var(--ink);font-weight:600}
+.flag .path{margin-top:5px;font-size:11.5px;color:var(--navy)}
+.flag .path::before{content:'→ ';color:var(--brass)}
+.noflags{font-size:13px;color:var(--soft)}
+
+table.rank{width:100%;border-collapse:collapse}
+table.rank td{padding:6px 8px 6px 0;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+table.rank tr:last-child td{border-bottom:none}
+td.rbar{width:34%}
+td.rbar i{display:block;height:9px;background:var(--navy);border-radius:2px;min-width:2px}
+td.rname{font-weight:600}
+td.rname small{display:block;font-weight:400;font-size:11px;color:var(--faint)}
+td.rv{text-align:right;white-space:nowrap}
+td.rv .num{font-weight:600}
+td.rv small{color:var(--faint);margin-left:6px}
+@media(max-width:560px){td.rbar{display:none}}
+
+.method{border-top:3px double var(--strong);margin-top:26px;padding-top:10px;
+  font-size:11px;color:var(--faint);max-width:78ch}
+.method b{color:var(--soft)}
+
+@media print{
+  @page{size:letter;margin:.5in}
+  html{border-top:0}body{background:#fff}
+  .bar,.privacy,.intake,.gateline,.btns{display:none!important}
+  .wrap{padding:0;max-width:none}
+  .folio{display:block!important;box-shadow:none;padding:0;background:#fff}
+  :root{--paper:#fff;--card:#fff;--ink:#16181d;--soft:#555;--faint:#777;--line:#ddd;--strong:#bbb;
+    --navy:#1b3a5c;--brass:#a07620;--gate:#1c6b47;--gatebg:#eef4ef;--flag:#a33b2e;--flagbg:#f8eeea}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <div class="mark">STATEMENT <span>BRIEF</span></div>
+    <div class="tag">one statement in · one reconciled brief out · Curry Studio</div>
+    <div class="btns">
+      <button id="b-sample">Load the sample</button>
+      <button id="b-tamper">Tamper test</button>
+      <button id="b-print" class="primary">Print the brief</button>
+    </div>
+  </div>
+  <p class="privacy"><b>Nothing you paste leaves this file.</b> No uploads, no network calls, no
+    third-party services — the entire engine runs inside this one HTML page, on your machine.</p>
+
+  <div class="intake">
+    <h2>The statement</h2>
+    <div class="igrid">
+      <div>
+        <textarea id="csv" spellcheck="false"
+          placeholder="Paste the statement's transactions as CSV — Date, Description, Amount (or Debit/Credit columns). Or press Load the sample."></textarea>
+        <div class="mapline" id="mapline">Columns are detected from the header row — <b>you map a
+          bank's format once</b>; every later month just gets pasted.</div>
+      </div>
+      <div class="ctl">
+        <label><em>Beginning balance (printed)</em><input id="c-begin" inputmode="decimal"></label>
+        <label><em>Ending balance (printed)</em><input id="c-end" inputmode="decimal"></label>
+        <label><em>Business (optional)</em><input id="c-name" placeholder="—"></label>
+        <label><em>Statement period (optional)</em><input id="c-period" placeholder="—"></label>
+        <div class="hint">The two balances come off the statement's own first page — they are the
+          bank's printed control figures, and the brief below refuses to render unless the parsed
+          transactions reproduce them exactly.</div>
+        <button class="primary" id="b-run" style="grid-column:1/-1;border-radius:8px;padding:11px">Reconcile</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="gateline" id="gate"></div>
+
+  <div class="folio" id="brief">
+    <div class="f-mast">
+      <span class="f-eyebrow">THE MONTH, RECONCILED</span>
+      <span class="co" id="f-co"></span>
+    </div>
+    <h1 id="f-title">Monthly brief</h1>
+    <p class="period" id="f-period"></p>
+    <div id="f-sample"></div>
+
+    <div class="tally" id="f-tally"></div>
+    <div id="f-stamp"></div>
+
+    <h2 class="sched">Worth a question</h2>
+    <div class="flags" id="f-flags"></div>
+
+    <h2 class="sched">Where the month went</h2>
+    <table class="rank" id="f-cats"></table>
+
+    <div class="method" id="f-method"></div>
+  </div>
+</div>
+
+<script type="text/csv" id="sample-data">Date,Description,Amount
+07/01/2026,CARD SETTLEMENT DEP 0630-0701,3412.88
+07/01/2026,RENT - 118 WEBSTER ST LLC,-2400.00
+07/02/2026,WNY RESTAURANT SUPPLY INV 88231,-1286.44
+07/02/2026,CARD SETTLEMENT DEP 0701,1104.62
+07/03/2026,GUSTO PAYROLL 0703,-4318.75
+07/03/2026,CARD SETTLEMENT DEP 0702,1287.40
+07/06/2026,CARD SETTLEMENT DEP 0703-0705,4980.15
+07/06/2026,NATIONAL FUEL 716-555 JUL,-412.33
+07/07/2026,UPSTATE LINEN & UNIFORM 2201,-325.00
+07/07/2026,CARD SETTLEMENT DEP 0706,998.05
+07/08/2026,ATM WITHDRAWAL - PAYNE AVE,-400.00
+07/08/2026,CARD SETTLEMENT DEP 0707,1032.18
+07/09/2026,UPSTATE LINEN & UNIFORM 2214,-325.00
+07/09/2026,CARD SETTLEMENT DEP 0708,1121.76
+07/10/2026,WNY RESTAURANT SUPPLY INV 88307,-1409.02
+07/10/2026,CARD SETTLEMENT DEP 0709,1188.90
+07/13/2026,CARD SETTLEMENT DEP 0710-0712,5233.48
+07/13/2026,NYSEG ELECTRIC JUL,-618.27
+07/14/2026,BUFFALO ROASTING CO BEANS,-892.50
+07/14/2026,CARD SETTLEMENT DEP 0713,1044.11
+07/15/2026,GUSTO PAYROLL 0717,-4318.75
+07/15/2026,CARD SETTLEMENT DEP 0714,967.83
+07/16/2026,ESPRESSO MACHINE CO OF WNY,-4800.00
+07/16/2026,CARD SETTLEMENT DEP 0715,1015.44
+07/17/2026,CARD SETTLEMENT DEP 0716,1093.72
+07/17/2026,SPECTRUM BUSINESS INTERNET,-129.99
+07/20/2026,CARD SETTLEMENT DEP 0717-0719,5104.66
+07/20/2026,WNY RESTAURANT SUPPLY INV 88402,-1355.61
+07/21/2026,VENDING CO-OP FARMERS MKT CASH DEP,640.00
+07/21/2026,CITY OF NT WATER/SEWER Q3,-287.40
+07/22/2026,ATM WITHDRAWAL - PAYNE AVE,-300.00
+07/22/2026,CARD SETTLEMENT DEP 0721,1009.35
+07/23/2026,BUFFALO ROASTING CO BEANS,-892.50
+07/23/2026,CARD SETTLEMENT DEP 0722,1148.06
+07/24/2026,CARD SETTLEMENT DEP 0723,1077.29
+07/24/2026,MERCHANT SERVICES FEE JUN,-486.12
+07/27/2026,CARD SETTLEMENT DEP 0724-0726,4886.53
+07/27/2026,SIMPLE SYRUP + DAIRY - UPSTATE FARMS,-734.18
+07/28/2026,GUSTO PAYROLL 0731,-4318.75
+07/28/2026,CARD SETTLEMENT DEP 0727,921.14
+07/29/2026,CARD SETTLEMENT DEP 0728,1056.90
+07/29/2026,NT CHAMBER OF COMMERCE DUES,-150.00
+07/30/2026,CARD SETTLEMENT DEP 0729,1112.63
+07/30/2026,WNY RESTAURANT SUPPLY INV 88490,-1247.83
+07/31/2026,BANK SERVICE CHARGE,-45.00
+07/31/2026,CARD SETTLEMENT DEP 0730,1038.27</script>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const fmt$ = n => (n < 0 ? '−$' : '$') + Math.abs(n).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// money as integer cents — float drift must never put a false penny in a tie-out
+const toCents = v => Math.round(v * 100);
+
+/* ---------------- CSV ---------------- */
+function parseCSV(text) {
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) {
+      if (ch === '"') { if (text[i+1] === '"') { cell += '"'; i++; } else q = false; }
+      else cell += ch;
+    } else if (ch === '"') q = true;
+    else if (ch === ',') { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text[i+1] === '\n') i++;
+      row.push(cell); cell = '';
+      if (row.some(c => c.trim() !== '')) rows.push(row);
+      row = [];
+    } else cell += ch;
+  }
+  row.push(cell);
+  if (row.some(c => c.trim() !== '')) rows.push(row);
+  return rows;
+}
+// Warrant lessons live here: strip $ and commas, accept (123.45), accept "123.45 -"
+// (trailing minus, no symbol), never let a stray space break a number.
+function parseAmount(s) {
+  if (s == null) return null;
+  let t = String(s).trim().replace(/[$,]/g, '');
+  if (!t) return null;
+  let neg = false;
+  if (/^\(.*\)$/.test(t)) { neg = true; t = t.slice(1, -1); }
+  if (/-\s*$/.test(t)) { neg = true; t = t.replace(/-\s*$/, ''); }
+  if (/^-/.test(t)) { neg = true; t = t.slice(1); }
+  t = t.trim();
+  if (!/^\d*\.?\d+$/.test(t)) return null;
+  const v = parseFloat(t);
+  return neg ? -v : v;
+}
+function detectColumns(header) {
+  const H = header.map(h => h.trim().toLowerCase());
+  const find = names => H.findIndex(h => names.some(n => h.includes(n)));
+  const date = find(['date', 'posted']);
+  const desc = find(['description', 'payee', 'memo', 'detail', 'transaction']);
+  const amount = find(['amount']);
+  const debit = find(['debit', 'withdrawal']);
+  const credit = find(['credit', 'deposit']);
+  if (date < 0 || desc < 0) return null;
+  if (amount >= 0) return { date, desc, amount, mode: 'signed' };
+  if (debit >= 0 && credit >= 0) return { date, desc, debit, credit, mode: 'split' };
+  return null;
+}
+function parseStatement(text) {
+  const rows = parseCSV(text.trim());
+  if (rows.length < 2) return { error: 'Need a header row plus at least one transaction.' };
+  const cols = detectColumns(rows[0]);
+  if (!cols) return { error: 'Could not find the columns. Expected headers like Date, Description, Amount — or Date, Description, Debit, Credit.' };
+  const txns = [], bad = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    let amt = null;
+    if (cols.mode === 'signed') amt = parseAmount(r[cols.amount]);
+    else {
+      const d = parseAmount(r[cols.debit]), c = parseAmount(r[cols.credit]);
+      if (d != null && d !== 0) amt = -Math.abs(d);
+      else if (c != null) amt = Math.abs(c);
+    }
+    if (amt == null) { bad.push(i + 1); continue; }
+    txns.push({ date: (r[cols.date] || '').trim(), desc: (r[cols.desc] || '').trim(), amt });
+  }
+  if (!txns.length) return { error: 'No parsable transactions.' };
+  return { txns, bad, mode: cols.mode };
+}
+
+/* ---------------- counterparty + categories ---------------- */
+function counterparty(desc) {
+  // strip trailing invoice/reference numerals and dates so UPSTATE LINEN 2201
+  // and 2214 read as the same payee — edges only, never the middle of a name
+  return desc.toUpperCase()
+    .replace(/\b(INV|INVOICE|REF|NO|#)\s*[\w-]*\d[\w-]*\s*$/i, '')
+    .replace(/[\s\d/.-]+$/g, '')
+    .replace(/\s{2,}/g, ' ').trim() || desc.toUpperCase();
+}
+const CATEGORY_RULES = [
+  ['Card revenue', /CARD SETTLEMENT|MERCHANT DEP|SQUARE INC|STRIPE|TOAST DEP/, 'in'],
+  ['Other deposits', /DEPOSIT|CASH DEP/, 'in'],
+  ['Payroll', /GUSTO|PAYROLL|ADP|PAYCHEX/, 'out'],
+  ['Rent', /RENT|LANDLORD|PROPERTIES LLC|ST LLC/, 'out'],
+  ['Suppliers', /SUPPLY|ROASTING|FARMS|SYSCO|US FOODS|LINEN|PRODUCE/, 'out'],
+  ['Utilities & internet', /NATIONAL FUEL|NYSEG|ELECTRIC|WATER|SEWER|SPECTRUM|VERIZON|GAS CO/, 'out'],
+  ['Bank & card fees', /FEE|SERVICE CHARGE|MERCHANT SERVICES/, 'out'],
+  ['Cash withdrawals', /ATM|CASH WITHDRAWAL/, 'out'],
+];
+function categorize(txn) {
+  for (const [name, re, dir] of CATEGORY_RULES) {
+    if (re.test(txn.desc.toUpperCase())) {
+      if (dir === 'in' && txn.amt > 0) return name;
+      if (dir === 'out' && txn.amt < 0) return name;
+    }
+  }
+  return null; // uncategorized — the honest catch-all
+}
+
+/* ---------------- flags: every one a question ---------------- */
+function computeFlags(txns) {
+  const flags = [];
+  const outs = txns.filter(t => t.amt < 0);
+  const outTotal = outs.reduce((s, t) => s - t.amt, 0);
+  if (!outs.length) return flags;
+
+  // 1 · twin payments — same payee, same amount, within 5 days
+  const seen = new Map();
+  const twins = [];
+  outs.forEach(t => {
+    const key = counterparty(t.desc) + '|' + t.amt.toFixed(2);
+    if (seen.has(key)) {
+      const prev = seen.get(key);
+      const d1 = new Date(prev.date), d2 = new Date(t.date);
+      const days = Math.abs(d2 - d1) / 86400000;
+      if (isFinite(days) && days <= 5) twins.push({ a: prev, b: t, days: Math.round(days) });
+    }
+    seen.set(key, t);
+  });
+  twins.forEach(tw => flags.push({
+    key: fmt$(-tw.a.amt), title: 'The same amount, twice, ' + (tw.days === 0 ? 'the same day' : tw.days + ' days apart'),
+    body: `<b>${esc(counterparty(tw.a.desc))}</b> — ${esc(tw.a.date)} and ${esc(tw.b.date)}, both ${fmt$(-tw.a.amt)}. Two real orders, or one invoice paid twice?`,
+    path: 'Pull both invoices; if they share a number, request the credit this week.'
+  }));
+
+  // 2 · the spike — biggest single item vs the month's median
+  const sorted = outs.map(t => -t.amt).sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+  const biggest = outs.reduce((m, t) => (-t.amt > -m.amt ? t : m), outs[0]);
+  if (-biggest.amt >= 4 * median && -biggest.amt >= 500) flags.push({
+    key: fmt$(-biggest.amt), title: (-biggest.amt / median).toFixed(1) + '× the month’s median payment',
+    body: `<b>${esc(counterparty(biggest.desc))}</b> (${esc(biggest.date)}) is the month's largest single item — the median payment is ${fmt$(median)}. Planned purchase, or surprise?`,
+    path: 'One receipt pull answers it; if planned, note it so next month’s reader doesn’t ask again.'
+  });
+
+  // 3 · vendor concentration (payroll excluded — payroll SHOULD be big)
+  const byCp = new Map();
+  outs.forEach(t => {
+    if (/GUSTO|PAYROLL|ADP|PAYCHEX/.test(t.desc.toUpperCase())) return;
+    const k = counterparty(t.desc);
+    byCp.set(k, (byCp.get(k) || 0) - t.amt);
+  });
+  const topCp = [...byCp.entries()].sort((a, b) => b[1] - a[1])[0];
+  if (topCp && topCp[1] / outTotal >= 0.15) flags.push({
+    key: (topCp[1] / outTotal * 100).toFixed(0) + '%',
+    title: 'One vendor is ' + (topCp[1] / outTotal * 100).toFixed(0) + '% of the month’s outflow',
+    body: `<b>${esc(topCp[0])}</b> — ${fmt$(topCp[1])} across the month. Nothing wrong with a big supplier; the question is whether the price still reflects that volume.`,
+    path: 'Worth a quote from one competitor at renewal — concentration is negotiating leverage.'
+  });
+
+  // 4 · cash — it leaves no trail
+  const cash = outs.filter(t => /ATM|CASH WITHDRAWAL/.test(t.desc.toUpperCase()));
+  if (cash.length) {
+    const total = cash.reduce((s, t) => s - t.amt, 0);
+    flags.push({
+      key: fmt$(total), title: cash.length + ' cash withdrawal' + (cash.length > 1 ? 's' : '') + ' — no paper behind them',
+      body: `Cash is the only money on this statement that carries no counterparty. ${fmt$(total)} this month. Not an accusation — an absence of record.`,
+      path: 'A one-line cash log (who, what, when) closes the gap for pennies of effort.'
+    });
+  }
+
+  // 5 · fees
+  const fees = outs.filter(t => /FEE|SERVICE CHARGE|MERCHANT SERVICES/.test(t.desc.toUpperCase()));
+  if (fees.length) {
+    const total = fees.reduce((s, t) => s - t.amt, 0);
+    const inTotal = txns.filter(t => t.amt > 0).reduce((s, t) => s + t.amt, 0);
+    flags.push({
+      key: fmt$(total), title: 'Bank and processing fees took ' + (inTotal ? (total / inTotal * 100).toFixed(1) + '% of deposits' : fmt$(total)),
+      body: fees.map(f => `${esc(counterparty(f.desc))} ${fmt$(-f.amt)}`).join(' · ') + '. Fees are a price, and prices are negotiable.',
+      path: 'Ask the processor for the current effective rate in writing; compare once a year.'
+    });
+  }
+
+  // 6 · the catch-all — spend no rule recognizes
+  const uncat = outs.filter(t => !categorize(t));
+  const uncatTotal = uncat.reduce((s, t) => s - t.amt, 0);
+  if (uncatTotal / outTotal >= 0.10) flags.push({
+    key: (uncatTotal / outTotal * 100).toFixed(0) + '%',
+    title: (uncatTotal / outTotal * 100).toFixed(0) + '% of spending has no category yet',
+    body: uncat.slice(0, 4).map(t => `${esc(counterparty(t.desc))} ${fmt$(-t.amt)}`).join(' · ') +
+      (uncat.length > 4 ? ` · +${uncat.length - 4} more` : '') +
+      '. The engine doesn’t know these names — <b>you do</b>.',
+    path: 'Name them once and every future month files them automatically — the map is the setup, the re-drop is the routine.'
+  });
+
+  return flags;
+}
+
+/* ---------------- render ---------------- */
+let LAST = null;
+function reconcile() {
+  const text = $('csv').value;
+  const begin = parseAmount($('c-begin').value);
+  const end = parseAmount($('c-end').value);
+  const gate = $('gate'), brief = $('brief');
+  brief.classList.remove('on');
+  if (!text.trim()) { gate.className = 'gateline halt'; gate.innerHTML = 'NO STATEMENT — paste transactions or load the sample.'; return; }
+  if (begin == null || end == null) { gate.className = 'gateline halt'; gate.innerHTML = 'MISSING CONTROL FIGURES — the printed beginning and ending balances are the whole point.<small>They are on the statement’s first page. Without them this would be self-graded arithmetic.</small>'; return; }
+  const parsed = parseStatement(text);
+  if (parsed.error) { gate.className = 'gateline halt'; gate.innerHTML = 'PARSE REFUSED — ' + esc(parsed.error); return; }
+  const { txns, bad } = parsed;
+  const inC = txns.filter(t => t.amt > 0).reduce((s, t) => s + toCents(t.amt), 0);
+  const outC = txns.filter(t => t.amt < 0).reduce((s, t) => s - toCents(t.amt), 0);
+  const computedEndC = toCents(begin) + inC - outC;
+  const varianceC = computedEndC - toCents(end);
+
+  if (varianceC !== 0) {
+    gate.className = 'gateline halt';
+    gate.innerHTML = `HALTED — computed ending balance is off by ${fmt$(varianceC / 100)}. No brief.` +
+      `<small>Beginning ${fmt$(begin)} + deposits ${fmt$(inC / 100)} − withdrawals ${fmt$(outC / 100)} = ${fmt$(computedEndC / 100)}, but the statement prints ${fmt$(end)}. ` +
+      `A page refusing to publish is the feature: something is missing, doubled, or mistyped${bad.length ? ' (rows skipped as unparsable: line ' + bad.join(', ') + ')' : ''}.</small>`;
+    LAST = null;
+    return;
+  }
+
+  gate.className = 'gateline tie';
+  gate.innerHTML = `TIES OUT — ${txns.length} transactions reproduce the statement’s printed balances exactly. Variance $0.00.` +
+    (bad.length ? `<small>Rows skipped as unparsable: line ${bad.join(', ')} — a skipped row that mattered would have broken the tie-out above.</small>` : '');
+  renderBrief(txns, begin, end, inC, outC);
+  LAST = { txns, begin, end };
+}
+
+function renderBrief(txns, begin, end, inC, outC) {
+  const name = $('c-name').value.trim();
+  const period = $('c-period').value.trim();
+  $('f-co').textContent = name || 'Prepared from the statement as provided';
+  $('f-title').textContent = name ? name + ' — the month, reconciled' : 'The month, reconciled';
+  $('f-period').textContent = (period ? period + ' · ' : '') + txns.length + ' transactions · prepared by Curry Studio';
+  $('f-sample').innerHTML = IS_SAMPLE ? '<div class="sample-band">SYNTHETIC SAMPLE — NOT A REAL BUSINESS’S DATA</div>' : '';
+
+  $('f-tally').innerHTML =
+    `<div class="trow"><span class="l">Opening balance, as printed</span><span class="v num">${fmt$(begin)}</span></div>` +
+    `<div class="trow"><span class="l">Money in</span><span class="v num">${fmt$(inC / 100)}</span></div>` +
+    `<div class="trow"><span class="l">Money out</span><span class="v num">−${fmt$(outC / 100).slice(1)}</span></div>` +
+    `<div class="tnet"><span class="l">Closing balance</span><span class="v num">${fmt$(end)}</span></div>`;
+  $('f-stamp').innerHTML = '<span class="stamp">TIES TO THE STATEMENT’S OWN PRINTED FIGURES · VARIANCE $0.00</span>';
+
+  const flags = computeFlags(txns);
+  $('f-flags').innerHTML = flags.length
+    ? flags.map(f => `<div class="flag"><span class="key num">${f.key}</span><h3>${f.title}</h3><p>${f.body}</p><div class="path">${f.path}</div></div>`).join('')
+    : '<p class="noflags">Nothing rose to a question this month — that is a finding too.</p>';
+
+  // categories — outflow only, ranked, bar scaled to largest
+  const cats = new Map();
+  txns.filter(t => t.amt < 0).forEach(t => {
+    const c = categorize(t) || 'Not yet categorized';
+    cats.set(c, (cats.get(c) || 0) - t.amt);
+  });
+  const rows = [...cats.entries()].sort((a, b) => b[1] - a[1]);
+  const top = rows.length ? rows[0][1] : 1;
+  const outTotal = outC / 100;
+  $('f-cats').innerHTML = rows.map(([c, v]) =>
+    `<tr><td class="rname">${esc(c)}</td><td class="rbar"><i style="width:${(v / top * 100).toFixed(1)}%"></i></td>` +
+    `<td class="rv"><span class="num">${fmt$(v)}</span><small>${(v / outTotal * 100).toFixed(0)}%</small></td></tr>`
+  ).join('');
+
+  $('f-method').innerHTML = `<b>Method.</b> Transactions parsed from the statement text you provided; ` +
+    `nothing left this file. The gate: opening balance + deposits − withdrawals must equal the ` +
+    `statement’s own printed closing balance to the penny, or no brief renders. Flags are questions, ` +
+    `not accusations — each carries its resolution path. Categories are named rules you approve once; ` +
+    `unrecognized spending is shown as unrecognized, never guessed.`;
+
+  $('brief').classList.add('on');
+}
+
+/* ---------------- demo controls ---------------- */
+let IS_SAMPLE = false, TAMPERED = false;
+$('b-sample').addEventListener('click', () => {
+  $('csv').value = $('sample-data').textContent.trim();
+  $('c-begin').value = '18204.11';
+  $('c-end').value = '29226.02';
+  $('c-name').value = 'Harbor & Main Coffee Co.';
+  $('c-period').value = 'July 1 – July 31, 2026';
+  IS_SAMPLE = true; TAMPERED = false;
+  $('b-tamper').textContent = 'Tamper test';
+  reconcile();
+});
+$('b-tamper').addEventListener('click', () => {
+  if (!$('csv').value.trim()) { $('b-sample').click(); }
+  if (!TAMPERED) {
+    // quietly change one amount by $120 — the gate should catch it instantly
+    const lines = $('csv').value.split('\n');
+    for (let i = 1; i < lines.length; i++) {
+      const m = lines[i].match(/^(.*,)(-?\d+\.\d{2})\s*$/);
+      if (m && parseFloat(m[2]) < 0) {
+        lines[i] = m[1] + (parseFloat(m[2]) - 120).toFixed(2);
+        break;
+      }
+    }
+    $('csv').value = lines.join('\n');
+    TAMPERED = true;
+    $('b-tamper').textContent = 'Undo tamper';
+  } else {
+    $('b-sample').click();
+    return;
+  }
+  reconcile();
+});
+$('b-run').addEventListener('click', () => { IS_SAMPLE = false; TAMPERED = false; reconcile(); });
+$('b-print').addEventListener('click', () => {
+  if (!$('brief').classList.contains('on')) { $('gate').className = 'gateline halt'; $('gate').textContent = 'Nothing to print — reconcile a statement first.'; return; }
+  print();
+});
+$('csv').addEventListener('input', () => { IS_SAMPLE = false; });
+</script>
+</body>
+</html>

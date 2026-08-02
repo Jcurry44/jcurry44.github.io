@@ -440,6 +440,44 @@ html:not(.curtain) .loader { display: none; }
   .cap__desc { grid-column: 1 / -1; justify-self: start; text-align: left; margin-top: 0.5rem; }
 }
 
+/* ---- Engagements (productized offers) ---- */
+.eng__head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: clamp(1.5rem, 3.5vw, 2.5rem); flex-wrap: wrap; }
+.eng__title { font-size: var(--step-2); font-style: italic; font-weight: 700; }
+.eng__lede { font-size: var(--step-0); color: var(--dim); max-width: 58ch; margin-bottom: clamp(2rem, 4.5vw, 3.2rem); }
+.eng__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(1rem, 2vw, 1.6rem); }
+@media (max-width: 880px) { .eng__grid { grid-template-columns: 1fr; } }
+.eng {
+  border: 1px solid var(--line); padding: clamp(1.2rem, 2.4vw, 1.8rem);
+  display: flex; flex-direction: column; gap: 0.7rem; position: relative;
+  transition: border-color 0.5s var(--ease), transform 0.5s var(--ease);
+}
+@media (hover: hover) { .eng:hover { border-color: var(--brass); transform: translateY(-3px); } }
+.eng__num { font-family: var(--mono); font-size: var(--step--1); color: var(--faint); letter-spacing: 0.1em; }
+.eng__name { font-style: italic; font-weight: 700; font-size: var(--step-1); line-height: 1.15; }
+.eng__desc { font-size: var(--step-0); color: var(--dim); flex: 1; }
+.eng__shape { font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--brass); border-top: 1px solid var(--line); padding-top: 0.7rem; }
+.eng__foot { margin-top: clamp(1.6rem, 3vw, 2.4rem); font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.06em; color: var(--faint); }
+.eng__foot a { color: var(--paper); text-underline-offset: 3px; }
+
+/* ---- Contact form ---- */
+.cform { margin: clamp(2rem, 4vw, 3rem) auto 0; max-width: 620px; display: grid; gap: 0.9rem; text-align: left; }
+.cform label { display: block; }
+.cform em { font-style: normal; display: block; font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-bottom: 0.35rem; }
+.cform input, .cform textarea {
+  width: 100%; background: transparent; border: 1px solid var(--line); color: var(--fg);
+  font-family: var(--display); font-size: var(--step-0); padding: 0.7rem 0.85rem; border-radius: 2px;
+}
+.cform textarea { min-height: 96px; resize: vertical; }
+.cform input:focus, .cform textarea:focus { outline: none; border-color: var(--brass); }
+.cform button {
+  justify-self: start; cursor: pointer; background: var(--paper); color: var(--felt-deep);
+  border: 1px solid var(--paper); border-radius: 999px; padding: 0.8rem 1.6rem;
+  font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.1em; text-transform: uppercase;
+  transition: background 0.4s var(--ease), color 0.4s var(--ease);
+}
+.cform button:hover { background: transparent; color: var(--paper); }
+.cform__status { font-family: var(--mono); font-size: var(--step--1); color: var(--brass); min-height: 1.2em; }
+
 /* ---- Work / case studies ---- */
 .work__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: clamp(2.5rem, 6vw, 5rem); flex-wrap: wrap; }
 .work__title { font-size: var(--step-3); font-style: italic; font-weight: 700; line-height: 0.95; }
@@ -728,10 +766,26 @@ html:not(.curtain) .loader { display: none; }
           <span class="case__role">Concept · Data · Build · Operation</span>
         </div>
         <p class="case__line">A live market-intelligence platform that prices professional hockey contracts: 2,000+ interactive asset pages, forecast models with published accuracy, a what-if trade simulator, and automated daily data operations. Its arbitration forecasts are pre-registered and publicly anchored before the hearings — a data product built end-to-end and run by one person.</p>
-        <span class="case__index">01 / 03</span>
+        <span class="case__index">01 / 04</span>
       </article>
 
-      <!-- 02 Nicastro -->
+      <!-- 02 Public Ledger -->
+      <article class="case" data-reveal>
+        <div class="case__media">
+          <a class="case__media-link" href="https://jcurry44.github.io/public-ledger/" target="_blank" rel="noopener" data-cursor="VISIT" aria-label="Visit Public Ledger"></a>
+          <div class="case__ph" data-tag="Civic data" aria-hidden="true"><b>Public<br>Ledger</b></div>
+          <span class="case__badge">Preview — unlisted</span>
+          <span class="case__url" aria-hidden="true"><i></i>jcurry44.github.io/public-ledger</span>
+        </div>
+        <div class="case__meta">
+          <h3 class="case__name">Public Ledger</h3>
+          <span class="case__role">Data · Verification · Build · Operation</span>
+        </div>
+        <p class="case__line">A city's published finances, made checkable: 8,532 approved claims parsed from the public record, reconciled against the city's own printed control totals — all 36 machine-readable warrants tie to the penny, and the build refuses to publish if one stops tying. Auto-generated council briefs for every meeting, a 63-flag exception report, and a county edition reconciling $69.1M of shared sales tax across 21 governments to within 0.14%.</p>
+        <span class="case__index">02 / 04</span>
+      </article>
+
+      <!-- 03 Nicastro -->
       <article class="case case--md" data-reveal>
         <div class="case__media">
           <div class="case__ph" data-tag="Client build" aria-hidden="true"><b>Nicastro<br>Accounting</b></div>
@@ -742,10 +796,10 @@ html:not(.curtain) .loader { display: none; }
           <span class="case__role">Design · Build</span>
         </div>
         <p class="case__line">Site design and build for a Western New York accounting firm: a living-ledger hero, a tax-deadline radar, and a personalized document-checklist builder. A site that works the way the firm does — precise, calm, and useful before the first phone call.</p>
-        <span class="case__index">02 / 03</span>
+        <span class="case__index">03 / 04</span>
       </article>
 
-      <!-- 03 7 Construction -->
+      <!-- 04 7 Construction -->
       <article class="case case--md" data-reveal>
         <div class="case__media">
           <div class="case__ph" data-tag="Client build" aria-hidden="true"><b>7 Construction</b></div>
@@ -756,7 +810,7 @@ html:not(.curtain) .loader { display: none; }
           <span class="case__role">Design · Build</span>
         </div>
         <p class="case__line">A blueprint-styled site for a family framing company in North Tonawanda: drafting-table aesthetic, a project gallery, and a lead form built for phone-first customers who need a framer, not a brochure.</p>
-        <span class="case__index">03 / 03</span>
+        <span class="case__index">04 / 04</span>
       </article>
 
     </div>
@@ -797,9 +851,49 @@ html:not(.curtain) .loader { display: none; }
     </div>
   </section>
 
+  <!-- ===== ENGAGEMENTS ===== -->
+  <section class="section eng-sec wrap" id="engagements">
+    <div class="eng__head">
+      <h2 class="eng__title" data-reveal>Engagements</h2>
+      <p class="eyebrow" data-reveal>(03) What to hire</p>
+    </div>
+    <p class="eng__lede" data-reveal>Built in Buffalo for Western New York businesses and practices that
+      run on spreadsheets — three fixed-shape ways to start, each delivered as a working thing, not a
+      proposal.</p>
+    <div class="eng__grid">
+      <article class="eng" data-reveal>
+        <span class="eng__num">E·01</span>
+        <h3 class="eng__name">Business Health Dashboard</h3>
+        <p class="eng__desc">Your existing exports — QuickBooks, payroll, bank — become one
+          exception-first dashboard: what's owed to you and aging, which jobs are burning faster than
+          they're billing, where the month actually went. Mapped once; every later month is a
+          re-drop, not a project.</p>
+        <span class="eng__shape">Scoped setup + monthly run rate</span>
+      </article>
+      <article class="eng" data-reveal>
+        <span class="eng__num">E·02</span>
+        <h3 class="eng__name">The Monthly Brief</h3>
+        <p class="eng__desc">A one-page reconciled brief on your books that refuses to render unless it
+          ties to your own statements' printed totals — flags framed as questions with their resolution
+          paths, every number traceable to its source line.</p>
+        <span class="eng__shape">Per month · per entity</span>
+      </article>
+      <article class="eng" data-reveal>
+        <span class="eng__num">E·03</span>
+        <h3 class="eng__name">Sites &amp; tools that compute</h3>
+        <p class="eng__desc">Hand-built sites and working tools — estimators, checklist builders,
+          decision aids — designed, built, deployed, and then actually run: monitoring, updates, and
+          daily data operations included.</p>
+        <span class="eng__shape">Project-scoped · build + run</span>
+      </article>
+    </div>
+    <p class="eng__foot" data-reveal>Founding-client rates, in writing, after one conversation —
+      <a href="#contact" data-cursor="CONTACT">start it below</a>.</p>
+  </section>
+
   <!-- ===== STUDIO ===== -->
   <section class="section studio wrap" id="studio">
-    <p class="eyebrow" data-reveal style="margin-bottom: clamp(2rem, 5vw, 4rem)">(03) Studio</p>
+    <p class="eyebrow" data-reveal style="margin-bottom: clamp(2rem, 5vw, 4rem)">(04) Studio</p>
     <div class="studio__grid">
       <h2 class="studio__lead"><span class="lm"><span>The whole job,</span></span><span class="lm"><span>one pair of hands.</span></span></h2>
       <div class="studio__body">
@@ -817,11 +911,19 @@ html:not(.curtain) .loader { display: none; }
 
   <!-- ===== CTA ===== -->
   <section class="section cta wrap" id="contact">
-    <p class="eyebrow" data-reveal style="margin-bottom: clamp(1.5rem, 3vw, 2.5rem)">(04) Contact</p>
+    <p class="eyebrow" data-reveal style="margin-bottom: clamp(1.5rem, 3vw, 2.5rem)">(05) Contact</p>
     <h2 class="cta__line"><span class="lm"><span>Have a thing that</span></span><span class="lm"><span>should compute?</span></span></h2>
     <a href="mailto:jjcurry027@gmail.com" class="cta__btn" data-cursor="EMAIL">
       <span class="dot"></span> jjcurry027@gmail.com
     </a>
+    <form class="cform" id="cform" data-reveal novalidate>
+      <label><em>Your name</em><input type="text" name="name" id="cf-name" autocomplete="name"></label>
+      <label><em>Email</em><input type="email" name="email" id="cf-email" autocomplete="email"></label>
+      <label><em>The thing that should compute</em><textarea name="message" id="cf-msg"
+        placeholder="A report you rebuild by hand every month, a number nobody can check, a quote that takes all weekend…"></textarea></label>
+      <button type="submit" data-cursor="SEND">Send it</button>
+      <p class="cform__status" id="cf-status" role="status"></p>
+    </form>
     <div class="cta__diligence" data-reveal>
       <span class="cta__diligence-lead">Diligence</span>
       <a href="https://www.linkedin.com/in/joseph-curry-940738129/" target="_blank" rel="me noopener" data-cursor="LINKEDIN">LinkedIn ↗</a>
@@ -911,6 +1013,40 @@ html:not(.curtain) .loader { display: none; }
   /* ---- Footer year ---- */
   const yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  /* ---- Contact form ----
+     FORM_ENDPOINT: paste a Formspree-style URL to POST directly.
+     While empty, submit falls back to a prefilled mailto — a lead is
+     never silently dropped, whichever state the endpoint is in. */
+  const FORM_ENDPOINT = "";
+  const cform = document.getElementById("cform");
+  if (cform) cform.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("cf-name").value.trim();
+    const email = document.getElementById("cf-email").value.trim();
+    const msg = document.getElementById("cf-msg").value.trim();
+    const status = document.getElementById("cf-status");
+    if (!msg && !email) { status.textContent = "An email or a message — one of the two, at least."; return; }
+    if (FORM_ENDPOINT) {
+      status.textContent = "Sending…";
+      try {
+        const r = await fetch(FORM_ENDPOINT, {
+          method: "POST", headers: { "Accept": "application/json", "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, message: msg })
+        });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        status.textContent = "Sent — I read these same-day.";
+        cform.reset();
+      } catch (err) {
+        status.textContent = "That didn't go through — email me directly: jjcurry027@gmail.com";
+      }
+    } else {
+      const body = encodeURIComponent((msg || "") + (name ? "\n\n— " + name : "") + (email ? " (" + email + ")" : ""));
+      window.location.href = "mailto:jjcurry027@gmail.com?subject=" +
+        encodeURIComponent("A thing that should compute") + "&body=" + body;
+      status.textContent = "Opening your mail app — or just email jjcurry027@gmail.com";
+    }
+  });
 
   /* ---- Loader (watchdog first: rAF doesn't tick in background tabs,
           and a page must never trap itself behind its own curtain) ---- */
