@@ -69,15 +69,17 @@ main{max-width:1280px;margin:0 auto;padding-inline:16px;padding-block:4px 40px}
 .stage{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:28px;align-items:start}
 
 /* ---------- panel ---------- */
-.panel{position:relative;border-radius:22px;overflow:hidden;background:#0d1015;aspect-ratio:4/3;max-width:100%;
+.panel{position:relative;border-radius:22px;overflow:hidden;background:#040507;aspect-ratio:4/3;max-width:100%;
   box-shadow:0 40px 90px -50px rgba(150,210,255,.35),inset 0 0 0 1px rgba(255,255,255,.04);user-select:none;-webkit-user-select:none}
 #paint{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y;cursor:none}
-.tag{position:absolute;left:12px;top:12px;font:500 9px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:rgba(230,240,250,.45);
-  background:rgba(8,10,13,.55);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:999px;padding:6px 9px;pointer-events:none}
+.tag{position:absolute;left:14px;top:14px;font:500 9px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:rgba(230,240,250,.7);
+  text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 8px rgba(0,0,0,.9);pointer-events:none}
 .replay{position:absolute;right:12px;top:12px;font:500 11px/1 var(--mono);background:rgba(8,10,13,.55);backdrop-filter:blur(6px);
   border:1px solid var(--line);border-radius:999px;padding:6px 10px;color:var(--ink2)}
-.hint{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);font:600 12px/1 var(--wide);letter-spacing:.02em;white-space:nowrap;
-  background:rgba(8,10,13,.62);backdrop-filter:blur(8px);border:1px solid var(--line2);border-radius:999px;padding:8px 13px;pointer-events:none;transition:opacity .3s}
+.hint{position:absolute;left:12px;bottom:12px;font:600 11px/1 var(--wide);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62%;
+  background:rgba(8,10,13,.62);backdrop-filter:blur(8px);border:1px solid var(--line2);border-radius:999px;padding:7px 11px;pointer-events:none;transition:opacity .4s}
+.tag,.replay{transition:opacity .4s}
+.panel.dark .tag,.panel.dark .replay,.panel.dark .hint{opacity:0}
 .hint i{font-style:normal;color:var(--light)}
 .title{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .5s}
 .title.on{opacity:1}
@@ -205,10 +207,10 @@ td.na{color:var(--mute)}
 <main>
   <section class="stage" aria-label="Choose your coating package">
     <div class="panel" id="panelbox">
-      <canvas id="paint" aria-label="Paint panel under an inspection light. Move the light to see swirl marks; press and hold to see the paint before."></canvas>
+      <canvas id="paint" aria-label="A car hood and headlight under hex shop lights, with an inspection light. Move the light to see swirl marks; press and hold to see the paint before."></canvas>
       <span class="tag">Illustration, not a measurement</span>
       <button class="replay" id="replay" aria-label="Replay the intro">↻ Replay</button>
-      <div class="hint" id="hint">Move the light · <i>hold</i> to see it before</div>
+      <div class="hint" id="hint">Move the light · <i>hold</i> = before</div>
       <div class="title" id="title"><span>Four tiers.<br>One light.</span></div>
     </div>
 
@@ -305,7 +307,7 @@ const ROWS = [
 /* visual state per package: swirl bands [light, medium, deep, very deep] and gloss.
    Shallow swirls go first; the deepest few stay faintly at every level (illustrative). */
 const BANDS = [[0,.8,1,1],[0,0,.6,1],[0,0,0,.5],[0,0,0,.42]];
-const GLOSS = [.42,.64,.86,.9];
+const GLOSS = [.25,.55,.85,1];
 const ARRIVE = {bands:[1,1,1,1], gloss:0};
 
 const S = {
@@ -353,7 +355,7 @@ function readout(prev){
   labels.querySelectorAll('button').forEach(b => b.setAttribute('aria-current', +b.dataset.i===S.tier));
   $('.price').style.visibility = '';
   receipt(S.tier);
-  $('#hint').innerHTML = holdUsed ? `Hold for before · release for <i>${t.name}</i>` : 'Move the light · <i>hold</i> to see it before';
+  $('#hint').innerHTML = holdUsed ? `Hold = before · release = <i>${t.name}</i>` : 'Move the light · <i>hold</i> = before';
   renderWhats(S.tier);
 }
 function renderWhats(i){
@@ -413,52 +415,226 @@ dial.addEventListener('keydown', e => {
 });
 addEventListener('resize', () => placeKnob(S.pos));
 
-/* ---------- canvas: paint, swirls, light, rain ---------- */
+/* ---------- canvas: the bay, the car, swirls, lamp, rain ----------
+   Knee-high camera at the driver-side front corner: hood, headlight, fender and the top of the wheel, under a
+   hex LED ceiling. The hood reflects the ceiling; how sharp that reflection is tells the story of each package. */
 const cv = $('#paint'), ctx = cv.getContext('2d');
-let W=0, H=0, DPR=1, base=null, bead=null, smear=null, glint=null;
-const rrect = (g,x,y,w,h,r) => { g.beginPath(); if (g.roundRect) g.roundRect(x,y,w,h,r); else g.rect(x,y,w,h); };
-let SX, SY, SC, SN, SB, SL, grid, cell, gw, gh;   // scratches
-
-function build(){
-  const r = $('#panelbox').getBoundingClientRect();
-  DPR = Math.min(2, devicePixelRatio||1); W = Math.round(r.width); H = Math.round(r.height);
-  if (!W || !H) return;
-  cv.width = W*DPR; cv.height = H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
-  base = paintBase(); makeSprites(); makeScratches();
+const probe = document.createElement('canvas').getContext('2d');   // identity transform, for hit tests in CSS px
+let W=0, H=0, DPR=1, L=null, P=null, bead=null, smear=null;
+let SX, SY, SC, SN, SB, SL, grid, gw, gh; const cell = 40;
+const rnd = (a,b) => a + Math.random()*(b-a);
+const lerp = (a,b,k) => a + (b-a)*k;
+Object.assign(S, {bank:[1,1,1], bankT:[1,1,1], level:1, drl:1});
+function layer(){
+  const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(W*DPR)); c.height = Math.max(1, Math.round(H*DPR));
+  const g = c.getContext('2d'); g.setTransform(DPR,0,0,DPR,0,0); return [c, g];
 }
-function rnd(a,b){ return a + Math.random()*(b-a); }
-function paintBase(){
-  const c = document.createElement('canvas'); c.width = W*DPR; c.height = H*DPR;
+const waistY = x => { const t = x/W; return (1-t)*(1-t)*.48*H + 2*(1-t)*t*.43*H + t*t*.40*H; };
+
+function paths(){
+  const x = f => f*W, y = f => f*H;
+  const body = new Path2D();
+  body.moveTo(0, y(.30));
+  body.quadraticCurveTo(x(.30), y(.20), x(.62), y(.215));
+  body.quadraticCurveTo(x(.84), y(.225), W, y(.285));
+  body.lineTo(W, H); body.lineTo(x(.46), H);
+  body.quadraticCurveTo(x(.20), y(.90), 0, y(.80));
+  body.closePath();
+  const above = new Path2D();                       // everything above the waist line = the hood's top surface
+  above.moveTo(0,0); above.lineTo(W,0); above.lineTo(W, y(.40));
+  above.quadraticCurveTo(x(.5), y(.43), 0, y(.48)); above.closePath();
+  const arch = new Path2D(); arch.ellipse(x(.80), y(.97), W*.27, W*.31, 0, 0, Math.PI*2);
+  const paint = new Path2D(body); paint.addPath(arch);   // evenodd: body minus the wheel arch
+  const glass = new Path2D();
+  glass.moveTo(x(.60), y(.217));
+  glass.quadraticCurveTo(x(.68), y(.185), x(.80), y(.168));
+  glass.lineTo(W, y(.162)); glass.lineTo(W, y(.285));
+  glass.quadraticCurveTo(x(.84), y(.225), x(.60), y(.217)); glass.closePath();
+  const lamp = new Path2D();                        // headlight: a swept blade, tapering toward the fender
+  lamp.moveTo(x(.02), y(.50));
+  lamp.quadraticCurveTo(x(.20), y(.465), x(.40), y(.412));
+  lamp.quadraticCurveTo(x(.41), y(.43), x(.395), y(.445));
+  lamp.quadraticCurveTo(x(.21), y(.555), x(.02), y(.60));
+  lamp.closePath();
+  const drl = new Path2D();                          // L-shaped running light: a short drop at the outer corner, then the blade
+  drl.moveTo(x(.045), y(.585)); drl.lineTo(x(.038), y(.515));
+  drl.quadraticCurveTo(x(.20), y(.478), x(.385), y(.424));
+  return {body, above, arch, paint, glass, lamp, drl, drlLen: Math.hypot(x(.35), y(.09))*1.05 + y(.07)};
+}
+
+function hexBand(w, h, r, lw){
+  const c = document.createElement('canvas'); c.width = Math.max(1, Math.ceil(w*DPR)); c.height = Math.max(1, Math.ceil(h*DPR));
   const g = c.getContext('2d'); g.setTransform(DPR,0,0,DPR,0,0);
-  // body colour: deep blue-black metallic with a horizontal shoulder
+  g.strokeStyle = 'rgba(242,248,255,.95)'; g.lineWidth = lw; g.lineJoin = 'round';
+  g.shadowColor = 'rgba(165,212,255,.95)'; g.shadowBlur = lw*4;
+  const hw = Math.sqrt(3)*r, vs = 1.5*r;
+  for (let row=0, yy=h/2 - vs; yy < h + r; row++, yy += vs){
+    const off = (row % 2) ? hw/2 : 0;
+    for (let xx = -hw + off; xx < w + hw; xx += hw){
+      g.beginPath();
+      for (let k=0;k<6;k++){ const a = Math.PI/3*k + Math.PI/6, px = xx + Math.cos(a)*r, py = yy + Math.sin(a)*r; k ? g.lineTo(px,py) : g.moveTo(px,py); }
+      g.closePath(); g.stroke();
+    }
+  }
+  return c;
+}
+
+function bgLayer(){
+  const [c, g] = layer(), x = f => f*W, y = f => f*H;
   let lg = g.createLinearGradient(0,0,0,H);
-  lg.addColorStop(0,'#2a3442'); lg.addColorStop(.33,'#151b24'); lg.addColorStop(.36,'#3a4656'); lg.addColorStop(.39,'#121820');
-  lg.addColorStop(.8,'#0b0f14'); lg.addColorStop(1,'#07090c');
+  lg.addColorStop(0,'#090c11'); lg.addColorStop(.17,'#141a24'); lg.addColorStop(.32,'#0a0e13'); lg.addColorStop(1,'#040507');
   g.fillStyle = lg; g.fillRect(0,0,W,H);
-  // metallic flake: barely there in shadow; the bright glints live on their own layer and only show where light hits
-  const n = Math.round(W*H/9);
-  for (let i=0;i<n;i++){
-    g.fillStyle = `rgba(170,190,215,${(Math.random()*.025).toFixed(4)})`;
-    g.fillRect(Math.random()*W, Math.random()*H, .8, .8);
+  const rg = g.createRadialGradient(x(.16), y(.88), 0, x(.16), y(.88), W*.38);
+  rg.addColorStop(0,'rgba(150,185,220,.18)'); rg.addColorStop(1,'rgba(150,185,220,0)');
+  g.fillStyle = rg; g.fillRect(0,0,W,H);
+  const sg = g.createRadialGradient(x(.80), y(1.02), 0, x(.80), y(1.02), W*.22);
+  sg.addColorStop(0,'rgba(0,0,0,.6)'); sg.addColorStop(1,'rgba(0,0,0,0)');
+  g.save(); g.translate(x(.80), y(1.02)); g.scale(1, (H*.04)/(W*.22)); g.translate(-x(.80), -y(1.02));
+  g.fillStyle = sg; g.beginPath(); g.arc(x(.80), y(1.02), W*.22, 0, Math.PI*2); g.fill(); g.restore();
+  return c;
+}
+
+function bodyLayer(){
+  const [c, g] = layer(), x = f => f*W, y = f => f*H;
+  g.save(); g.clip(P.body);
+  // flank: below the waist the panel turns away from the ceiling and picks up the dark floor
+  let lg = g.createLinearGradient(0, y(.40), 0, H);
+  lg.addColorStop(0,'#1e2834'); lg.addColorStop(.12,'#0e141b'); lg.addColorStop(.7,'#06090c'); lg.addColorStop(1,'#0c1117');
+  g.fillStyle = lg; g.fillRect(0,0,W,H);
+  // hood: lighter toward the glancing far edge
+  g.save(); g.clip(P.above);
+  lg = g.createLinearGradient(0, y(.48), x(.15), y(.19));
+  lg.addColorStop(0,'#0c121a'); lg.addColorStop(.7,'#151d28'); lg.addColorStop(1,'#29333f');
+  g.fillStyle = lg; g.fillRect(0,0,W,H);
+  g.strokeStyle = 'rgba(200,220,240,.06)'; g.lineWidth = Math.max(6, W*.02); g.lineCap = 'round';   // centre crest
+  g.beginPath(); g.moveTo(0, y(.43)); g.quadraticCurveTo(x(.30), y(.30), x(.60), y(.225)); g.stroke();
+  g.restore();
+  // shoulder roll right under the waist: the soft highlight that makes a flat fill read as a curved panel
+  lg = g.createLinearGradient(0, y(.40), 0, y(.52));
+  lg.addColorStop(0,'rgba(190,215,240,0)'); lg.addColorStop(.45,'rgba(190,215,240,.13)'); lg.addColorStop(1,'rgba(190,215,240,0)');
+  g.save(); g.beginPath(); g.moveTo(0, y(.48)); g.quadraticCurveTo(x(.5), y(.43), W, y(.40)); g.lineTo(W, y(.46)); g.quadraticCurveTo(x(.5), y(.49), 0, y(.545)); g.closePath(); g.fillStyle = lg; g.fill(); g.restore();
+  // floor bounce low on the flank
+  lg = g.createLinearGradient(0, y(.78), 0, H); lg.addColorStop(0,'rgba(120,150,185,0)'); lg.addColorStop(1,'rgba(120,150,185,.10)');
+  g.fillStyle = lg; g.fillRect(0, y(.78), W, H);
+  // lower intake under the headlight
+  g.fillStyle = 'rgba(0,0,0,.6)';
+  g.beginPath(); g.moveTo(0, y(.665)); g.quadraticCurveTo(x(.16), y(.64), x(.30), y(.612)); g.lineTo(x(.292), y(.638)); g.quadraticCurveTo(x(.15), y(.683), 0, y(.712)); g.closePath(); g.fill();
+  // hood shut line (a 1 px panel gap, the only stroke on the body)
+  g.lineWidth = 1;
+  g.strokeStyle = 'rgba(0,0,0,.5)'; g.beginPath(); g.moveTo(x(.385), y(.42)); g.quadraticCurveTo(x(.52), y(.33), x(.66), y(.29)); g.stroke();
+  g.strokeStyle = 'rgba(255,255,255,.05)'; g.beginPath(); g.moveTo(x(.388), y(.425)); g.quadraticCurveTo(x(.523), y(.335), x(.663), y(.295)); g.stroke();
+  // wheel well
+  g.fillStyle = '#020304'; g.fill(P.arch);
+  g.restore();
+  // fender lip catching the ceiling
+  g.save(); g.clip(P.body);
+  g.strokeStyle = 'rgba(180,205,230,.16)'; g.lineWidth = 2;
+  g.beginPath(); g.ellipse(x(.80), y(.97), W*.27+1, W*.31+1, 0, Math.PI*1.1, Math.PI*1.62); g.stroke();
+  g.restore();
+  // tire + rim
+  const cx = x(.80), cy = y(.97), rx = W*.17, ry = W*.20;
+  g.fillStyle = '#07080a'; g.beginPath(); g.ellipse(cx, cy, W*.235, W*.275, 0, 0, Math.PI*2); g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.06)'; g.lineWidth = 1.5; g.beginPath(); g.ellipse(cx, cy, W*.212, W*.248, 0, 0, Math.PI*2); g.stroke();
+  let rg = g.createRadialGradient(cx - rx*.25, cy - ry*.3, 2, cx, cy, ry);
+  rg.addColorStop(0,'#cfd7e0'); rg.addColorStop(.55,'#7b8592'); rg.addColorStop(1,'#353c45');
+  g.fillStyle = rg; g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2); g.fill();
+  g.save(); g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2); g.clip();
+  for (let i=0;i<160;i++){                          // brushed metal
+    const a = Math.random()*Math.PI*2;
+    g.strokeStyle = `rgba(${Math.random()<.5 ? '255,255,255' : '0,0,0'},${rnd(.03,.08).toFixed(3)})`; g.lineWidth = .6;
+    g.beginPath(); g.moveTo(cx + Math.cos(a)*rx*.2, cy + Math.sin(a)*ry*.2); g.lineTo(cx + Math.cos(a)*rx, cy + Math.sin(a)*ry); g.stroke();
   }
-  glint = document.createElement('canvas'); glint.width = W*DPR; glint.height = H*DPR;
-  const gg = glint.getContext('2d'); gg.setTransform(DPR,0,0,DPR,0,0);
+  g.fillStyle = '#0a0c0f';                           // five tapered spoke gaps
+  const hx = cx - W*.025, pt = (a, rr) => [hx + Math.cos(a)*rx*rr*(1 - .1*Math.cos(a)), cy + Math.sin(a)*ry*rr];
+  g.lineJoin = 'round';
+  for (let k=0;k<5;k++){
+    const a = -Math.PI/2 + Math.PI/5 + k*Math.PI*2/5;
+    g.beginPath(); g.moveTo(...pt(a-.13,.33)); g.lineTo(...pt(a-.30,.88)); g.lineTo(...pt(a+.30,.88)); g.lineTo(...pt(a+.13,.33)); g.closePath(); g.fill();
+  }
+  const sh = g.createLinearGradient(cx + rx*.2, 0, cx + rx, 0); sh.addColorStop(0,'rgba(0,0,0,0)'); sh.addColorStop(1,'rgba(0,0,0,.35)');
+  g.fillStyle = sh; g.fillRect(cx + rx*.2, cy - ry, rx*.8, ry*2);
+  g.restore();
+  g.fillStyle = '#1d2229'; g.beginPath(); g.ellipse(hx, cy, rx*.22, ry*.22, 0, 0, Math.PI*2); g.fill();
+  g.fillStyle = '#9aa4b0'; g.beginPath(); g.ellipse(hx-1, cy-1, rx*.08, ry*.08, 0, 0, Math.PI*2); g.fill();
+  g.strokeStyle = 'rgba(245,250,255,.85)'; g.lineWidth = 1.6;  // one bright arc on the lip, top-left
+  g.beginPath(); g.ellipse(cx, cy, rx*.97, ry*.97, 0, Math.PI*1.08, Math.PI*1.45); g.stroke();
+  return c;
+}
+// glass, mirror and headlight sit above the hood reflections
+function topLayer(){
+  const [c, g] = layer(), x = f => f*W, y = f => f*H;
+  let lg, rg;
+  // glass: darker than paint, one soft diagonal band, no hexes
+  lg = g.createLinearGradient(x(.6), y(.08), W, y(.29)); lg.addColorStop(0,'#0a1017'); lg.addColorStop(1,'#030508');
+  g.fillStyle = lg; g.fill(P.glass);
+  g.save(); g.clip(P.glass); g.fillStyle = 'rgba(200,220,240,.08)';
+  g.beginPath(); g.moveTo(x(.72), y(.06)); g.lineTo(x(.80), y(.06)); g.lineTo(x(.72), y(.31)); g.lineTo(x(.64), y(.31)); g.closePath(); g.fill(); g.restore();
+  // mirror, on a stalk back to the door
+  g.fillStyle = '#0b0f14'; g.beginPath(); g.moveTo(x(.90), y(.33)); g.lineTo(W, y(.31)); g.lineTo(W, y(.37)); g.lineTo(x(.91), y(.35)); g.closePath(); g.fill();
+  g.save(); g.translate(x(.905), y(.305)); g.rotate(-.12);
+  lg = g.createLinearGradient(0, -H*.04, 0, H*.04); lg.addColorStop(0,'#26303c'); lg.addColorStop(1,'#080b0f');
+  g.fillStyle = lg; g.beginPath(); g.ellipse(0, 0, W*.06, H*.038, 0, 0, Math.PI*2); g.fill();
+  g.strokeStyle = 'rgba(200,220,240,.40)'; g.lineWidth = 1.5; g.beginPath(); g.ellipse(0, 0, W*.058, H*.036, 0, Math.PI*1.1, Math.PI*1.85); g.stroke();
+  g.restore();
+  // headlight: smoky lens over a chrome reflector, three LED projectors, one soft specular
+  lg = g.createLinearGradient(0, y(.43), 0, y(.60)); lg.addColorStop(0,'#1c2631'); lg.addColorStop(.45,'#141c26'); lg.addColorStop(1,'#06090d');
+  g.fillStyle = lg; g.fill(P.lamp);
+  g.save(); g.clip(P.lamp);
+  lg = g.createLinearGradient(0, y(.50), 0, y(.56)); lg.addColorStop(0,'rgba(150,170,195,0)'); lg.addColorStop(.5,'rgba(150,170,195,.22)'); lg.addColorStop(1,'rgba(150,170,195,0)');
+  g.fillStyle = lg; g.save(); g.transform(1, -.22, 0, 1, 0, x(.0)*.22); g.fillRect(0, y(.50), x(.42), y(.06)); g.restore();
+  for (const [fx, fy, fr] of [[.10,.545,.026],[.17,.525,.022],[.24,.505,.018]]){
+    rg = g.createRadialGradient(x(fx)-1, y(fy)-1, 0, x(fx), y(fy), W*fr);
+    rg.addColorStop(0,'#eaf4ff'); rg.addColorStop(.18,'#8fa6c0'); rg.addColorStop(.45,'#243140'); rg.addColorStop(1,'#0a0e13');
+    g.fillStyle = rg; g.beginPath(); g.arc(x(fx), y(fy), W*fr, 0, Math.PI*2); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.5)'; g.lineWidth = 1; g.beginPath(); g.arc(x(fx), y(fy), W*fr*.55, 0, Math.PI*2); g.stroke();
+  }
+  g.fillStyle = 'rgba(230,240,252,.16)'; g.beginPath(); g.ellipse(x(.20), y(.488), W*.13, H*.010, -.26, 0, Math.PI*2); g.fill();
+  g.restore();
+  g.strokeStyle = 'rgba(0,0,0,.5)'; g.lineWidth = 1;   // the only line: the seam where hood meets lens
+  g.beginPath(); g.moveTo(x(.02), y(.50)); g.quadraticCurveTo(x(.20), y(.465), x(.40), y(.412)); g.stroke();
+  return c;
+}
+
+// y of the hood's top edge at any x (the two quadratic segments of the body path), via a sampled lookup
+function hoodEdge(){
+  const pts = [], q = (a,b,c,t) => (1-t)*(1-t)*a + 2*(1-t)*t*b + t*t*c;
+  for (let i=0;i<=40;i++){ const t=i/40; pts.push([q(0,.30*W,.62*W,t), q(.30*H,.20*H,.215*H,t)]); }
+  for (let i=1;i<=40;i++){ const t=i/40; pts.push([q(.62*W,.84*W,W,t), q(.215*H,.225*H,.285*H,t)]); }
+  return x => { for (let i=1;i<pts.length;i++) if (pts[i][0] >= x){ const [x0,y0]=pts[i-1],[x1,y1]=pts[i]; return y0 + (y1-y0)*((x-x0)/((x1-x0)||1)); } return pts[pts.length-1][1]; };
+}
+// the ceiling, reflected in the hood: rows squash toward the far edge and brighten at the glancing angle
+function reflLayer(){
+  const [c, g] = layer();
+  g.save(); g.clip(P.body); g.clip(P.above);
+  // rows bend with the hood's crown: each 3 px slice is shifted by how far the hood edge has risen at that x
+  const edge = hoodEdge(), y0 = edge(0), step = 3;
+  for (const [b, yy, hh, a] of [[0,.37,.085,.30],[1,.31,.05,.50],[2,.275,.03,.68]]){
+    const src = L.bands[b], sw = src.width / W;
+    g.globalAlpha = a;
+    for (let sx = 0; sx < W; sx += step){
+      const dy = (edge(sx) - y0) * .85;
+      g.drawImage(src, sx*sw, 0, step*sw, src.height, sx, yy*H + dy, step + .5, hh*H);
+    }
+  }
+  g.globalAlpha = 1; g.strokeStyle = 'rgba(220,235,250,.22)'; g.lineWidth = 1; g.beginPath();
+  for (let sx = 0; sx <= W; sx += step){ const yy = .262*H + (edge(sx) - y0)*.85; sx ? g.lineTo(sx, yy) : g.moveTo(sx, yy); }
+  g.stroke();
+  g.restore();
+  return c;
+}
+function blurCopy(src, f){
+  const s = document.createElement('canvas'); s.width = Math.max(1, (src.width/f)|0); s.height = Math.max(1, (src.height/f)|0);
+  const sg = s.getContext('2d'); sg.imageSmoothingQuality = 'high'; sg.drawImage(src, 0, 0, s.width, s.height);
+  const [c, g] = layer(); g.setTransform(1,0,0,1,0,0); g.imageSmoothingQuality = 'high'; g.drawImage(s, 0, 0, c.width, c.height);
+  g.setTransform(DPR,0,0,DPR,0,0); g.globalCompositeOperation = 'destination-in'; g.fill(P.body); g.fill(P.above);
+  return c;
+}
+function glintLayer(){
+  const [c, g] = layer();
   for (let i=0, m=Math.round(W*H/55); i<m; i++){
-    const s = rnd(.4,1.0);
-    gg.fillStyle = `rgba(225,240,255,${rnd(.12,.55).toFixed(2)})`;
-    gg.beginPath(); gg.arc(Math.random()*W, Math.random()*H, s/2+.15, 0, Math.PI*2); gg.fill();
+    const s = rnd(.4,1.0); g.fillStyle = `rgba(225,240,255,${rnd(.12,.55).toFixed(2)})`;
+    g.beginPath(); g.arc(Math.random()*W, Math.random()*H, s/2+.15, 0, Math.PI*2); g.fill();
   }
-  // door seam + handle recess
-  const sx = W*.72;
-  g.strokeStyle = 'rgba(0,0,0,.75)'; g.lineWidth = 2; g.beginPath(); g.moveTo(sx,0); g.bezierCurveTo(sx-4,H*.4,sx-2,H*.7,sx-6,H); g.stroke();
-  g.strokeStyle = 'rgba(255,255,255,.07)'; g.lineWidth = 1; g.beginPath(); g.moveTo(sx+2,0); g.bezierCurveTo(sx-2,H*.4,sx,H*.7,sx-4,H); g.stroke();
-  const hx = W*.56, hy = H*.47, hw = Math.min(110,W*.16), hh = 14;
-  g.fillStyle = 'rgba(0,0,0,.45)'; rrect(g,hx-hw/2,hy-hh/2,hw,hh,7); g.fill();
-  g.strokeStyle = 'rgba(255,255,255,.10)'; rrect(g,hx-hw/2,hy-hh/2+1,hw,hh,7); g.stroke();
-  // vignette
-  const vg = g.createRadialGradient(W*.5,H*.45,Math.min(W,H)*.2,W*.5,H*.5,Math.max(W,H)*.75);
-  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.55)');
-  g.fillStyle = vg; g.fillRect(0,0,W,H);
   return c;
 }
 function makeSprites(){
@@ -466,7 +642,7 @@ function makeSprites(){
   bead = document.createElement('canvas'); bead.width = bead.height = s;
   let g = bead.getContext('2d');
   // a water bead is a tiny lens: dark where it refracts the paint, a caustic glow on the far side, one hard specular
-  g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(s*.53,s*.58,s*.47,s*.42,0,0,Math.PI*2); g.fill();   // contact shadow
+  g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(s*.53,s*.58,s*.47,s*.42,0,0,Math.PI*2); g.fill();
   let rg = g.createRadialGradient(s*.42,s*.40,s*.02,s*.5,s*.5,s*.44);
   rg.addColorStop(0,'rgba(60,72,88,.85)'); rg.addColorStop(.6,'rgba(18,24,32,.92)'); rg.addColorStop(.92,'rgba(140,175,210,.55)'); rg.addColorStop(1,'rgba(140,175,210,0)');
   g.fillStyle = rg; g.beginPath(); g.arc(s/2,s/2,s*.44,0,Math.PI*2); g.fill();
@@ -481,35 +657,49 @@ function makeSprites(){
   g.fillStyle = rg; g.fillRect(0,0,s,s);
 }
 function makeScratches(){
-  // Buffer swirls: short scratches in random orientations. Under a point light only the ones running
+  // Buffer swirls: short scratches in random orientations, only on paint. Under a point light only the ones running
   // tangent to the light catch it, which is why real swirls show as rings around the light.
-  const n = Math.round(W*H/16);
-  SX = new Float32Array(n); SY = new Float32Array(n); SC = new Float32Array(n); SN = new Float32Array(n); SL = new Float32Array(n); SB = new Uint8Array(n);
-  // cluster scratches around buffer paths so they read as spiderwebs, not noise
-  const centers = Array.from({length:22}, () => [rnd(-.1,1.1)*W, rnd(-.1,1.1)*H, rnd(40,260)]);
-  for (let i=0;i<n;i++){
+  const want = Math.round(W*H/16);
+  SX = new Float32Array(want); SY = new Float32Array(want); SC = new Float32Array(want); SN = new Float32Array(want); SL = new Float32Array(want); SB = new Uint8Array(want);
+  const centers = Array.from({length:26}, () => [rnd(-.05,1.05)*W, rnd(.2,.95)*H, rnd(30,150)]);
+  let n = 0, tries = 0;
+  while (n < want && tries < want*5){
+    tries++;
     let x, y, th;
     if (Math.random() < .7){
       const c = centers[(Math.random()*centers.length)|0], a = Math.random()*Math.PI*2, rr = Math.sqrt(Math.random())*c[2];
       x = c[0] + Math.cos(a)*rr; y = c[1] + Math.sin(a)*rr; th = a + Math.PI/2 + rnd(-.25,.25);
-    } else { x = Math.random()*W; y = Math.random()*H; th = Math.random()*Math.PI; }
-    const b = Math.random(); const band = b < .45 ? 0 : b < .75 ? 1 : b < .95 ? 2 : 3;
-    SX[i]=x; SY[i]=y; SC[i]=Math.cos(th); SN[i]=Math.sin(th); SB[i]=band; SL[i]= rnd(4,14) * (band===3 ? 2.4 : band===2 ? 1.6 : 1);
+    } else { x = Math.random()*W; y = rnd(.2,1)*H; th = Math.random()*Math.PI; }
+    if (!probe.isPointInPath(P.paint, x, y, 'evenodd')) continue;
+    const b = Math.random(), band = b < .45 ? 0 : b < .75 ? 1 : b < .95 ? 2 : 3;
+    SX[n]=x; SY[n]=y; SC[n]=Math.cos(th); SN[n]=Math.sin(th); SB[n]=band; SL[n]=rnd(3,8); n++;
   }
-  cell = 48; gw = Math.ceil(W/cell)+1; gh = Math.ceil(H/cell)+1;
-  const counts = new Uint32Array(gw*gh);
-  for (let i=0;i<n;i++){ const gx = Math.min(gw-1,Math.max(0,(SX[i]/cell)|0)), gy = Math.min(gh-1,Math.max(0,(SY[i]/cell)|0)); counts[gy*gw+gx]++; }
+  gw = Math.ceil(W/cell)+1; gh = Math.ceil(H/cell)+1;
+  const counts = new Uint32Array(gw*gh), key = i => Math.min(gh-1,Math.max(0,(SY[i]/cell)|0))*gw + Math.min(gw-1,Math.max(0,(SX[i]/cell)|0));
+  for (let i=0;i<n;i++) counts[key(i)]++;
   grid = {start:new Uint32Array(gw*gh+1), idx:new Uint32Array(n)};
   for (let k=0;k<gw*gh;k++) grid.start[k+1] = grid.start[k] + counts[k];
-  const fillp = grid.start.slice(0,gw*gh);
-  for (let i=0;i<n;i++){ const gx = Math.min(gw-1,Math.max(0,(SX[i]/cell)|0)), gy = Math.min(gh-1,Math.max(0,(SY[i]/cell)|0)); grid.idx[fillp[gy*gw+gx]++] = i; }
+  const fillp = grid.start.slice(0, gw*gh);
+  for (let i=0;i<n;i++) grid.idx[fillp[key(i)]++] = i;
 }
-new ResizeObserver(() => { build(); placeKnob(S.pos); }).observe($('#panelbox'));
+function build(){
+  const r = $('#panelbox').getBoundingClientRect();
+  DPR = Math.min(2, devicePixelRatio||1); W = Math.round(r.width); H = Math.round(r.height);
+  if (!W || !H) return;
+  cv.width = W*DPR; cv.height = H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+  P = paths();
+  L = {bandY:[0,.085,.13], bandH:[.085,.045,.03]};
+  L.bands = L.bandH.map((h,i) => hexBand(W, h*H, h*H*.62, [2.0,1.4,1.0][i]));
+  L.bg = bgLayer(); L.body = bodyLayer(); L.top = topLayer(); L.sharp = reflLayer(); L.hazy = blurCopy(L.sharp, 20); L.mid = blurCopy(L.sharp, 7); L.glint = glintLayer();
+  makeSprites(); makeScratches();
+}
+let lastW = 0;
+new ResizeObserver(() => { const w = Math.round($('#panelbox').getBoundingClientRect().width); if (w !== lastW){ lastW = w; build(); } placeKnob(S.pos); }).observe($('#panelbox'));
 
 const BUCKETS = 6;
-const paths = Array.from({length:BUCKETS}, () => []);
+const buckets = Array.from({length:BUCKETS}, () => []);
 function drawSwirls(lx, ly, R, bands, clip){
-  for (const p of paths) p.length = 0;
+  for (const p of buckets) p.length = 0;
   const x0 = Math.max(0,((lx-R)/cell)|0), x1 = Math.min(gw-1,((lx+R)/cell)|0);
   const y0 = Math.max(0,((ly-R)/cell)|0), y1 = Math.min(gh-1,((ly+R)/cell)|0);
   const R2 = R*R;
@@ -524,47 +714,56 @@ function drawSwirls(lx, ly, R, bands, clip){
       const d = Math.sqrt(d2);
       let a = Math.abs((dx*SN[i] - dy*SC[i])/d);   // |sin| between scratch and radial = tangency
       a = a*a; a = a*a; a = a*a; a = a*a;            // ^16: only near-tangent scratches catch the light
-      const f = 1 - d/R;
-      const v = a * ba * (f*1.25) * (SB[i]===3 ? 1.3 : 1);
+      const v = a * ba * ((1 - d/R)*1.35) * (SB[i]===3 ? 1.3 : 1);
       if (v < .05) continue;
-      const b = Math.min(BUCKETS-1, (v*BUCKETS)|0);
-      paths[b].push(i);
+      buckets[Math.min(BUCKETS-1, (v*BUCKETS)|0)].push(i);
     }
   }
   ctx.lineCap = 'round';
   for (let b=0;b<BUCKETS;b++){
-    const list = paths[b]; if (!list.length) continue;
-    ctx.strokeStyle = `rgba(235,244,255,${((b+1)/BUCKETS*.85).toFixed(3)})`;
-    ctx.lineWidth = .9;
+    const list = buckets[b]; if (!list.length) continue;
+    ctx.strokeStyle = `rgba(235,244,255,${((b+1)/BUCKETS*.9).toFixed(3)})`; ctx.lineWidth = .85;
     ctx.beginPath();
     for (const i of list){ const h = SL[i]/2; ctx.moveTo(SX[i]-SC[i]*h, SY[i]-SN[i]*h); ctx.lineTo(SX[i]+SC[i]*h, SY[i]+SN[i]*h); }
     ctx.stroke();
   }
 }
-
+const gbuf = document.createElement('canvas'), gbx = gbuf.getContext('2d');
+function featheredGlints(lx, ly, r, on){
+  const s = Math.ceil(r*2*DPR);
+  if (gbuf.width !== s){ gbuf.width = gbuf.height = s; }
+  gbx.globalCompositeOperation = 'source-over'; gbx.clearRect(0,0,s,s);
+  gbx.drawImage(L.glint, (lx-r)*DPR, (ly-r)*DPR, s, s, 0, 0, s, s);
+  gbx.globalCompositeOperation = 'destination-in';
+  const g = gbx.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);
+  g.addColorStop(0,'rgba(0,0,0,.95)'); g.addColorStop(.55,'rgba(0,0,0,.5)'); g.addColorStop(1,'rgba(0,0,0,0)');
+  gbx.fillStyle = g; gbx.fillRect(0,0,s,s);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = on;
+  ctx.drawImage(gbuf, lx-r, ly-r, r*2, r*2); ctx.restore();
+}
 function rainPass(){
-  const n = Math.round(W*H/2600);
-  const now = performance.now();
-  for (let i=0;i<n;i++){
-    S.rain.push({x:Math.random()*W, y:Math.random()*H*.92, r:rnd(2.2,6.5), born:now + Math.random()*900, hold:rnd(250,900), vy:0, smear:false});
+  const n = Math.round(W*H/3600), now = performance.now();
+  for (let made=0, tries=0; made < n && tries < n*8; tries++){
+    const x = Math.random()*W*.97, y = rnd(.2,.5)*H;
+    if (y > waistY(x) - 4 || !probe.isPointInPath(P.body, x, y)) continue;
+    S.rain.push({x, y, x0:x, y0:y, r:rnd(2.5,6), born: now + Math.random()*800, hold: rnd(300,1100), vy:0}); made++;
   }
-  if (S.rain.length > 320) S.rain.splice(0, S.rain.length-320);
+  if (S.rain.length > 260) S.rain.splice(0, S.rain.length-260);
 }
 
-const lerp = (a,b,k) => a + (b-a)*k;
 let last = performance.now();
 function frame(now){
   const dt = Math.min(50, now-last); last = now;
-  if (!W || !base){ requestAnimationFrame(frame); return; }
-  // ease state
+  if (!L){ requestAnimationFrame(frame); return; }
   const k = 1 - Math.pow(.001, dt/700);
   for (let b=0;b<4;b++) S.bands[b] = lerp(S.bands[b], S.bandsT[b], k);
   S.gloss = lerp(S.gloss, S.glossT, k);
   S.before = lerp(S.before, S.beforeT, 1 - Math.pow(.001, dt/120));
   S.lightOn = lerp(S.lightOn, S.lightOnT, 1 - Math.pow(.001, dt/500));
+  for (let i=0;i<3;i++) S.bank[i] = lerp(S.bank[i], S.bankT[i], 1 - Math.pow(.001, dt/320));
+  S.level = lerp(S.level, (S.bank[0]+S.bank[1]+S.bank[2])/3, 1 - Math.pow(.001, dt/420));
   if (now - S.lastPointer > 2600 && !RM && !S.intro){
-    const t = now/1000;
-    S.tx = .5 + Math.sin(t*.45)*.26; S.ty = .46 + Math.sin(t*.7+1)*.2;
+    const t = now/1000; S.tx = .34 + Math.sin(t*.45)*.17; S.ty = .37 + Math.sin(t*.7+1)*.07;
   }
   const lk = 1 - Math.pow(.001, dt/(now - S.lastPointer < 2600 ? 90 : 900));
   S.lx = lerp(S.lx, S.tx, lk); S.ly = lerp(S.ly, S.ty, lk);
@@ -573,110 +772,106 @@ function frame(now){
   const bands = S.bands.map(v => lerp(v, 1, S.before));
   const gloss = lerp(S.gloss, 0, S.before);
 
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.drawImage(base, 0, 0, W, H);
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  ctx.drawImage(L.bg, 0, 0, W, H);
+  ctx.drawImage(L.body, 0, 0, W, H);
 
-  // studio light-bar reflection: soft and hazy on tired paint, crisp on corrected paint
-  const sweeping = S.intro && S.bar < 1.2;
-  const barX = sweeping ? S.bar : .62;
-  const barW = reflection(barX, sweeping ? Math.max(gloss, .5) : gloss);
-  // flake glints show only under the light-bar...
-  if (glint){
-    ctx.save(); ctx.translate(barX*W, 0); ctx.transform(1,0,-.35,1,0,0);
-    ctx.beginPath(); ctx.rect(-barW*.42, 0, barW*.84, H); ctx.clip();
-    ctx.setTransform(DPR,0,0,DPR,0,0); ctx.globalAlpha = sweeping ? .5 : .15; ctx.drawImage(glint, 0, 0, W, H);
-    ctx.restore();
+  // the ceiling in the hood: hazy on tired paint, crisp on corrected paint
+  if (RM){
+    const right = S.tier < 0 ? L.hazy : L.sharp;
+    ctx.save(); ctx.beginPath(); ctx.rect(0,0,W/2,H); ctx.clip(); ctx.drawImage(L.hazy,0,0,W,H); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.rect(W/2,0,W/2,H); ctx.clip(); ctx.drawImage(right,0,0,W,H); ctx.restore();
+  } else {
+    const lo = gloss < .5, f = lo ? gloss/.5 : (gloss-.5)/.5;
+    ctx.globalAlpha = 1 - f; ctx.drawImage(lo ? L.hazy : L.mid, 0, 0, W, H);
+    ctx.globalAlpha = f; ctx.drawImage(lo ? L.mid : L.sharp, 0, 0, W, H);
+    ctx.globalAlpha = 1;
   }
-  // ...and during the opening sweep the bar itself reveals the swirls as it passes
-  if (sweeping){ ctx.save(); ctx.globalCompositeOperation = 'lighter'; drawSwirls(barX*W - H*.12, H*.36, Math.min(W,H)*.42, [1,1,1,1], 0); ctx.restore(); }
-
-  // haze
-  if (gloss < .99){ ctx.fillStyle = `rgba(200,212,226,${(.075*(1-gloss)).toFixed(3)})`; ctx.fillRect(0,0,W,H); }
+  if (!RM && gloss < .99){ ctx.save(); ctx.clip(P.body); ctx.fillStyle = `rgba(190,205,222,${(.07*(1-gloss)).toFixed(3)})`; ctx.fillRect(0,0,W,H); ctx.restore(); }
+  ctx.drawImage(L.top, 0, 0, W, H);
 
   // coating sweep
   if (S.sweep){
     const t = (now - S.sweep.t0)/750;
     if (t >= 1) S.sweep = null; else {
       const x = lerp(-.4, 1.4, t)*W;
-      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      ctx.save(); ctx.clip(P.paint, 'evenodd'); ctx.globalCompositeOperation = 'lighter';
       const g = ctx.createLinearGradient(x-W*.25, 0, x+W*.05, H*.3);
-      g.addColorStop(0,'rgba(220,245,255,0)'); g.addColorStop(.75,'rgba(220,245,255,.16)'); g.addColorStop(1,'rgba(220,245,255,0)');
+      g.addColorStop(0,'rgba(220,245,255,0)'); g.addColorStop(.75,'rgba(220,245,255,.18)'); g.addColorStop(1,'rgba(220,245,255,0)');
       ctx.fillStyle = g; ctx.fillRect(0,0,W,H); ctx.restore();
     }
   }
 
-  // inspection light
-  const R = Math.min(W,H) * (RM ? .5 : .36);
-  const lx = RM ? W*.5 : S.lx*W, ly = RM ? H*.48 : S.ly*H;
+  // inspection light: lives only on the paint
+  const R = Math.min(W,H) * (RM ? .42 : .34);
+  const lx = RM ? W*.5 : S.lx*W, ly = RM ? H*.33 : S.ly*H;
   if (S.lightOn > .01 || RM){
     const on = RM ? 1 : S.lightOn;
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = on;
+    ctx.save(); ctx.clip(P.paint, 'evenodd'); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = on;
     let g = ctx.createRadialGradient(lx,ly,0,lx,ly,R);
     g.addColorStop(0,'rgba(170,205,240,.16)'); g.addColorStop(.5,'rgba(120,160,210,.06)'); g.addColorStop(1,'rgba(120,160,210,0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(lx,ly,R,0,Math.PI*2); ctx.fill();
     if (RM){
-      // static split: left half as it arrives, right half at the chosen package
-      drawSwirls(lx, ly, R, [1,1,1,1], W/2 * -1);
+      drawSwirls(lx, ly, R, [1,1,1,1], -W/2);
       drawSwirls(lx, ly, R, S.tier<0 ? [1,1,1,1] : BANDS[S.tier], W/2);
     } else drawSwirls(lx, ly, R, bands, 0);
-    if (glint) featheredGlints(lx, ly, R*.8, on);
+    featheredGlints(lx, ly, R*.8, on);
     g = ctx.createRadialGradient(lx,ly,0,lx,ly,R*.2);
     g.addColorStop(0,'rgba(255,255,255,.95)'); g.addColorStop(.25,'rgba(240,248,255,.55)'); g.addColorStop(1,'rgba(240,248,255,0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(lx,ly,R*.2,0,Math.PI*2); ctx.fill();
     ctx.restore();
-    if (RM){
-      ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.setLineDash([4,6]); ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2,H); ctx.stroke(); ctx.setLineDash([]);
-      ctx.font = '500 10px "IBM Plex Mono", monospace'; ctx.fillStyle = 'rgba(230,240,250,.8)';
-      ctx.fillText('BEFORE', 14, H-16); const lab = S.tier<0 ? '' : T[S.tier].name.toUpperCase(); ctx.fillText(lab, W - 14 - ctx.measureText(lab).width, H-16);
-    }
   }
 
-  // rain: beads on coated paint slide off; on bare paint (hold) drops flatten and sit
+  // rain on the hood: beads on coated paint roll off over the edge; on bare paint (hold) drops flatten and sit
   if (S.rain.length){
     const coated = S.coated && S.before < .5;
+    ctx.save(); ctx.clip(P.body); ctx.clip(P.above);
     for (let i=S.rain.length-1; i>=0; i--){
       const d = S.rain[i];
       if (now < d.born) continue;
       const age = now - d.born;
       if (coated){
-        if (age > d.hold){ d.vy += dt*.0009*(1 + d.r/4); d.y += d.vy*dt; }
+        if (age > d.hold){ d.vy += dt*.0007*(1 + d.r/4); d.y += d.vy*dt; d.x -= d.vy*dt*.35;
+          ctx.strokeStyle = 'rgba(220,240,255,.12)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(d.x0, d.y0); ctx.lineTo(d.x, d.y); ctx.stroke(); }
         const s = d.r*2 * Math.min(1, age/120);
         ctx.drawImage(bead, d.x - s/2, d.y - s/2, s, s);
-        if (d.y > H + 20) S.rain.splice(i,1);
+        if (d.y > waistY(Math.max(0,d.x)) + 10) S.rain.splice(i,1);
       } else {
         const s = d.r*4.2;
         ctx.drawImage(smear, d.x - s/2, d.y - s*.3, s, s*.6);
         if (age > 2600) S.rain.splice(i,1);
       }
     }
+    ctx.restore();
+  }
+
+  // lights off: the bay is dark until the ceiling banks come on
+  if (S.level < .995){ ctx.fillStyle = `rgba(2,3,5,${((1-S.level)*.95).toFixed(3)})`; ctx.fillRect(0,0,W,H); }
+
+  // daytime running light: a light source, so it sits above the darkness
+  if (S.drl > .01){
+    ctx.save(); ctx.strokeStyle = 'rgba(244,250,255,1)'; ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.shadowColor = 'rgba(160,210,255,1)'; ctx.shadowBlur = 12;
+    if (S.drl < 1) ctx.setLineDash([P.drlLen*S.drl, P.drlLen*2]);
+    ctx.stroke(P.drl); ctx.restore();
+    // and its reflection in the epoxy floor, outside the car
+    ctx.save();
+    const fl = new Path2D(); fl.rect(0, H*.70, W*.55, H*.30); fl.addPath(P.body); ctx.clip(fl, 'evenodd');
+    ctx.translate(0, H*1.40); ctx.scale(1, -1);
+    ctx.strokeStyle = 'rgba(200,230,255,.22)'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.shadowColor = 'rgba(160,210,255,.8)'; ctx.shadowBlur = 18;
+    if (S.drl < 1) ctx.setLineDash([P.drlLen*S.drl, P.drlLen*2]);
+    ctx.stroke(P.drl); ctx.restore();
+  }
+  // the ceiling itself
+  for (let i=0;i<3;i++) if (S.bank[i] > .01){ ctx.globalAlpha = S.bank[i]; ctx.drawImage(L.bands[i], 0, L.bandY[i]*H, W, L.bandH[i]*H); }
+  ctx.globalAlpha = 1;
+
+  if (RM){
+    ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.setLineDash([4,6]); ctx.beginPath(); ctx.moveTo(W/2,H*.18); ctx.lineTo(W/2,H); ctx.stroke(); ctx.setLineDash([]);
+    ctx.font = '500 10px "IBM Plex Mono", monospace'; ctx.fillStyle = 'rgba(230,240,250,.85)';
+    ctx.fillText('BEFORE', 14, H*.22); const lab = S.tier<0 ? '' : T[S.tier].name.toUpperCase(); ctx.fillText(lab, W - 14 - ctx.measureText(lab).width, H*.22);
   }
   requestAnimationFrame(frame);
-}
-// glints under the lamp fade out softly toward its edge (destination-in radial mask on a small buffer)
-const gbuf = document.createElement('canvas'), gbx = gbuf.getContext('2d');
-function featheredGlints(lx, ly, r, on){
-  const s = Math.ceil(r*2*DPR);
-  if (gbuf.width !== s){ gbuf.width = gbuf.height = s; }
-  gbx.globalCompositeOperation = 'source-over'; gbx.clearRect(0,0,s,s);
-  gbx.drawImage(glint, (lx-r)*DPR, (ly-r)*DPR, s, s, 0, 0, s, s);
-  gbx.globalCompositeOperation = 'destination-in';
-  const g = gbx.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);
-  g.addColorStop(0,'rgba(0,0,0,.95)'); g.addColorStop(.55,'rgba(0,0,0,.5)'); g.addColorStop(1,'rgba(0,0,0,0)');
-  gbx.fillStyle = g; gbx.fillRect(0,0,s,s);
-  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = on;
-  ctx.drawImage(gbuf, lx-r, ly-r, r*2, r*2); ctx.restore();
-}
-function reflection(x, gloss){
-  const cx = x*W, w = lerp(W*.22, W*.045, gloss), a = lerp(.05, .20, gloss);
-  ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  ctx.translate(cx, 0); ctx.transform(1,0,-.35,1,0,0);
-  const g = ctx.createLinearGradient(-w,0,w,0);
-  g.addColorStop(0,'rgba(220,235,250,0)'); g.addColorStop(.5,`rgba(220,235,250,${a.toFixed(3)})`); g.addColorStop(1,'rgba(220,235,250,0)');
-  ctx.fillStyle = g; ctx.fillRect(-w, 0, w*2, H*.36);
-  // the reflection breaks over the shoulder line and continues fainter below
-  ctx.globalAlpha = .45; ctx.fillRect(-w*1.2 + H*.05, H*.39, w*2.4, H*.61);
-  ctx.restore();
-  return w;
 }
 
 /* ---------- panel gestures: move the light; press and hold = before ---------- */
@@ -692,51 +887,55 @@ cv.addEventListener('pointerdown', e => {
   const r = cv.getBoundingClientRect();
   S.tx = (e.clientX - r.left)/r.width; S.ty = (e.clientY - r.top)/r.height; S.lastPointer = performance.now(); S.lightOnT = 1;
   downAt = [e.clientX, e.clientY];
-  holdT = setTimeout(() => { S.beforeT = 1; holdUsed = true; $('#hint').innerHTML = 'Before · <i>let go</i> for after'; }, 150);
+  holdT = setTimeout(() => { S.beforeT = 1; holdUsed = true; $('#hint').innerHTML = 'Before · <i>let go</i> = after'; }, 150);
 });
 const release = () => {
   clearTimeout(holdT); holdT = null; downAt = null;
-  if (S.beforeT){ S.beforeT = 0; $('#hint').innerHTML = holdUsed ? `Hold for before · release for <i>${S.tier<0?'after':T[S.tier].name}</i>` : $('#hint').innerHTML; }
+  if (S.beforeT){ S.beforeT = 0; $('#hint').innerHTML = holdUsed ? `Hold = before · release = <i>${S.tier<0?'after':T[S.tier].name}</i>` : $('#hint').innerHTML; }
 };
 cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release);
 cv.addEventListener('contextmenu', e => e.preventDefault());
 
-/* ---------- intro: sweep, light, auto-ride Silver→Diamond, settle on Gold (≤4 s) ---------- */
-const STEPS = [[2500,0],[2900,1],[3300,2],[3700,3],[4200,1]];
+/* ---------- intro: ceiling on in three banks, DRL, lamp + rings, ride Silver→Diamond, land Gold, teach the hold ---------- */
+const STEPS = [[2600,0],[3000,1],[3400,2],[3800,3],[4200,1]];
 function startIntro(){
-  if (RM){ S.lightOnT = 1; setTier(1); return; }
+  if (RM){ S.lightOnT = 1; S.bank = [1,1,1]; S.bankT = [1,1,1]; S.level = 1; S.drl = 1; setTier(1); return; }
   S.intro = {t0:performance.now(), i:0};
   S.tier = -1; S.bandsT = [1,1,1,1]; S.bands = [1,1,1,1]; S.glossT = 0; S.gloss = 0; S.lightOn = 0; S.lightOnT = 0; S.rain.length = 0;
-  S.coated = false; S.tx = S.lx = .45; S.ty = S.ly = .45; S.lastPointer = -1e9;
+  S.bank = [0,0,0]; S.bankT = [0,0,0]; S.level = 0; S.drl = 0; S.beforeT = 0; S.before = 0;
+  S.coated = false; S.tx = S.lx = .30; S.ty = S.ly = .36; S.lastPointer = -1e9;
   $('#tiername').textContent = 'BEFORE'; $('#aka').textContent = 'Paint as it arrives, before any package';
   S.pos = 0; placeKnob(0); $('#book').innerHTML = 'Book a package <span class="num">· from $700</span>';
   labels.querySelectorAll('button').forEach(b => b.setAttribute('aria-current', false));
   $('#mention').textContent = 'Silver'; renderWhats(0);
   $('.price').style.visibility = 'hidden'; delete $('#price').dataset.v; $('#hours').textContent = '';
   $('#receipt').innerHTML = '<span class="idle">Slide to see what each step up buys.</span>';
-  $('#title').classList.remove('on');
+  $('#title').classList.remove('on'); $('#panelbox').classList.add('dark');
 }
 function intro(now){
   const t = now - S.intro.t0;
-  S.bar = lerp(-.4, 1.25, Math.min(1, t/1300));
-  if (t > 900) S.lightOnT = 1;
-  S.tx = S.lx = .45; S.ty = S.ly = .45;     // pinned so the whole bloom sits in frame
+  if (t > 300) S.bankT[2] = 1;          // back row first
+  if (t > 500) S.bankT[1] = 1;
+  if (t > 700) S.bankT[0] = 1;          // nearest row last
+  S.drl = Math.max(0, Math.min(1, (t - 1100)/400));
+  if (t > 1500){ S.lightOnT = 1; $('#panelbox').classList.remove('dark'); }
+  S.tx = S.lx = .30; S.ty = S.ly = .36;   // pinned on the fender so the whole bloom sits in frame
   while (S.intro.i < STEPS.length && t >= STEPS[S.intro.i][0]){
     const [, tier] = STEPS[S.intro.i]; const lastStep = S.intro.i === STEPS.length-1;
     setTier(tier, {land:lastStep});
-    if (lastStep){ $('#title').classList.add('on'); setTimeout(() => $('#title').classList.remove('on'), 1700); knob.classList.remove('pulse'); void knob.offsetWidth; knob.classList.add('pulse'); }
+    if (lastStep){ $('#title').classList.add('on'); setTimeout(() => $('#title').classList.remove('on'), 1500); knob.classList.remove('pulse'); void knob.offsetWidth; knob.classList.add('pulse'); }
     S.intro.i++;
   }
   // teach the gesture without words: one automatic hold, then release
   if (S.intro.i >= STEPS.length){
-    if (t > 5600 && !S.intro.held){ S.intro.held = true; S.beforeT = 1; $('#hint').innerHTML = 'Before · <i>hold</i> the panel to compare'; }
-    if (t > 6400 && S.intro.held && S.beforeT){ S.beforeT = 0; $('#hint').innerHTML = 'Move the light · <i>hold</i> to see it before'; }
+    if (t > 4900 && !S.intro.held){ S.intro.held = true; S.beforeT = 1; $('#hint').innerHTML = 'Before · <i>hold</i> to compare'; }
+    if (t > 5600 && S.intro.held && S.beforeT){ S.beforeT = 0; $('#hint').innerHTML = 'Move the light · <i>hold</i> = before'; }
   }
-  if (S.intro.i >= STEPS.length && t > 6700){ S.intro = null; S.lastPointer = performance.now() - 1800; }
+  if (S.intro.i >= STEPS.length && t > 5900){ S.intro = null; S.lastPointer = performance.now() - 1800; }
 }
 function stopIntro(){
   if (!S.intro) return;
-  S.intro = null; S.lightOnT = 1; S.bar = .62; S.beforeT = 0; $('#title').classList.remove('on');
+  S.intro = null; S.lightOnT = 1; S.bankT = [1,1,1]; S.drl = 1; S.beforeT = 0; $('#title').classList.remove('on'); $('#panelbox').classList.remove('dark');
   if (S.tier < 0) setTier(1);
 }
 $('#replay').addEventListener('click', e => { e.stopPropagation(); startIntro(); });
