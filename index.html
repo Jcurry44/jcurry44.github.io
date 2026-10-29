@@ -178,14 +178,9 @@ html:not(.curtain) .loader { display: none; }
   position: fixed; inset: 0 0 auto 0; z-index: 8000;
   height: var(--header-h); display: flex; align-items: center;
   pointer-events: none;
-  background: var(--felt-deep);      /* solid: the page never reads through the bar (the ::before fades below it) */
+  background: var(--felt-deep);      /* solid: the page never reads through the bar */
 }
 .header a { pointer-events: auto; }
-.header::before {
-  content: ""; position: absolute; inset: -1px 0 -35% 0; z-index: -1;
-  /* solid behind the bar itself (74% of this layer = the header's height), then a soft fade: text never reads through the header */
-  background: linear-gradient(to bottom, rgba(5, 31, 22, 0.97) 0%, rgba(5, 31, 22, 0.97) 74%, rgba(5, 31, 22, 0) 100%);
-}
 .header__row {
   width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter);
   display: flex; align-items: center; justify-content: space-between; gap: 1rem;
@@ -316,34 +311,28 @@ html:not(.curtain) .loader { display: none; }
 @keyframes livePulse { 0%,100%{ opacity: 1 } 50%{ opacity: 0.35 } }
 @media (max-width: 760px) {
   .hero {
-    min-height: 100svh;
+    min-height: auto;
     justify-content: initial;
-    padding-top: calc(var(--header-h) + 1.45rem);
-    padding-bottom: 1.25rem;
+    padding-top: calc(var(--header-h) + 1.4rem);
+    padding-bottom: 1.5rem;
   }
-  .hero__topline {
-    position: static;
-  }
-  .hero__intro {
-    position: static;
-    width: auto;
-    max-width: 27rem;
-    margin-top: clamp(4.5rem, 10svh, 6.5rem);
-  }
+  .hero__topline { position: static; }
+  .hero__intro { position: static; width: auto; max-width: 27rem; margin-top: 2rem; }
   .hero__intro-copy { font-size: clamp(1.3rem, 5.8vw, 1.75rem); max-width: 25ch; }
   .hero__actions { margin-top: 1.2rem; }
   .hero__action:not(.hero__action--primary) { display: none; }
   .hero__wordmark {
-    margin-top: auto;
+    margin-top: 1.5rem;
     font-size: clamp(5.8rem, 28vw, 8.6rem);
     line-height: 0.79;
     letter-spacing: -0.045em;
   }
   .hero__foot { display: none; }
+  .marquee { display: none; }
+  .section { padding-block: 3rem; }
 }
 @media (max-width: 420px) {
-  .hero { min-height: 100svh; }
-  .hero__intro { margin-top: clamp(3.8rem, 8svh, 5.2rem); }
+  .hero__intro { margin-top: 1.6rem; }
   .hero__intro-copy span { margin-top: 0.35em; }
   .hero__actions { gap: 0.45rem 1rem; }
 }
@@ -416,32 +405,6 @@ html:not(.curtain) .loader { display: none; }
 }
 .marquee__track span::after { content: "×"; color: var(--brass); opacity: 0.55; font-style: normal; font-size: 0.6em; }
 
-/* ---- Capabilities ---- */
-.cap__head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: clamp(2rem, 5vw, 4rem); flex-wrap: wrap; }
-.cap__title { font-size: var(--step-2); font-style: italic; font-weight: 700; }
-.cap__list { border-top: 1px solid var(--line); }
-.cap__item {
-  display: grid; grid-template-columns: 4rem 1fr auto; gap: 1rem; align-items: center;
-  padding-block: clamp(1.2rem, 2.6vw, 2rem); border-bottom: 1px solid var(--line);
-  position: relative; transition: padding-left 0.5s var(--ease);
-}
-.cap__num { font-family: var(--mono); font-size: var(--step--1); color: var(--faint); }
-.cap__name { font-style: italic; font-weight: 700; font-size: var(--step-2); line-height: 1; transition: transform 0.5s var(--ease); }
-.cap__desc { font-size: var(--step-0); color: var(--dim); max-width: 34ch; justify-self: end; text-align: right; }
-.cap__item::before {
-  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 0;
-  background: var(--paper); opacity: 0.04; transition: width 0.5s var(--ease);
-}
-@media (hover: hover) {
-  .cap__item:hover::before { width: 100%; }
-  .cap__item:hover { padding-left: 1.5rem; }
-  .cap__item:hover .cap__name { transform: translateX(4px); }
-}
-@media (max-width: 720px) {
-  .cap__item { grid-template-columns: 2.5rem 1fr; }
-  .cap__desc { grid-column: 1 / -1; justify-self: start; text-align: left; margin-top: 0.5rem; }
-}
-
 /* ---- Engagements (productized offers) ---- */
 .eng__head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: clamp(1.5rem, 3.5vw, 2.5rem); flex-wrap: wrap; }
 .eng__title { font-size: var(--step-2); font-style: italic; font-weight: 700; }
@@ -461,108 +424,60 @@ html:not(.curtain) .loader { display: none; }
 .eng__foot { margin-top: clamp(1.6rem, 3vw, 2.4rem); font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.06em; color: var(--faint); }
 .eng__foot a { color: var(--paper); text-underline-offset: 3px; }
 
-/* ---- Contact form ---- */
-.cform { margin: clamp(2rem, 4vw, 3rem) auto 0; max-width: 620px; display: grid; gap: 0.9rem; text-align: left; }
-.cform label { display: block; }
-.cform em { font-style: normal; display: block; font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-bottom: 0.35rem; }
-.cform input, .cform textarea {
-  width: 100%; background: transparent; border: 1px solid var(--line); color: var(--fg);
-  font-family: var(--display); font-size: var(--step-0); padding: 0.7rem 0.85rem; border-radius: 2px;
-}
-.cform textarea { min-height: 96px; resize: vertical; }
-.cform input:focus, .cform textarea:focus { outline: none; border-color: var(--brass); }
-.cform button {
-  justify-self: start; cursor: pointer; background: var(--paper); color: var(--felt-deep);
-  border: 1px solid var(--paper); border-radius: 999px; padding: 0.8rem 1.6rem;
-  font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.1em; text-transform: uppercase;
-  transition: background 0.4s var(--ease), color 0.4s var(--ease);
-}
-.cform button:hover { background: transparent; color: var(--paper); }
-.cform__status { font-family: var(--mono); font-size: var(--step--1); color: var(--brass); min-height: 1.2em; }
-
 /* ---- Work / case studies ---- */
-.work__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: clamp(2.5rem, 6vw, 5rem); flex-wrap: wrap; }
+/* Real first screens of real products. Nothing is drawn over a screenshot:
+   the URL and the status live in text under the receipt. */
+.work__head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: clamp(1.5rem, 3vw, 2.5rem); flex-wrap: wrap; }
 .work__title { font-size: var(--step-3); font-style: italic; font-weight: 700; line-height: 0.95; }
-.work__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(2.5rem, 5vw, 5rem) clamp(1.25rem, 3vw, 2.5rem); }
+.work__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(2rem, 4vw, 3.5rem) clamp(1.25rem, 2.5vw, 2rem); }
 
-.case { display: block; grid-column: span 2; }
-.case--md { grid-column: span 1; }
-.case--md .case__meta { flex-direction: column; align-items: flex-start; gap: 0.45rem; }
-.case--md .case__ph b { font-size: clamp(1.8rem, 4.5vw, 3.6rem); }
-@media (max-width: 880px) { .case--md { grid-column: span 2; } }
+.case { display: block; grid-column: span 1; }
+.case--lead { grid-column: 1 / -1; }
 .case__media {
-  position: relative; overflow: hidden; aspect-ratio: 2 / 1;
+  display: block; position: relative; overflow: hidden;
+  aspect-ratio: 16 / 10;
   background: var(--felt-deep); border: 1px solid var(--line);
 }
-.case__media--image { background: #07111f; }
-.case__image {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: clamp(0.75rem, 2.5vw, 2.25rem);
-  transition: transform 0.9s var(--ease), opacity 0.5s var(--ease);
-}
-.case:hover .case__image { transform: scale(1.025); }
-.case__media--image::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, rgba(5, 31, 22, 0.06), rgba(5, 31, 22, 0.24)),
-    radial-gradient(circle at 50% 50%, transparent 44%, rgba(5, 31, 22, 0.18) 100%);
-  pointer-events: none;
-}
-/* Designed tile (until real screenshots go in): brand wordmark on a drafted grid */
-.case__ph {
-  position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden;
-  background:
-    repeating-linear-gradient(0deg, transparent 0 39px, rgba(242,238,227,0.05) 39px 40px),
-    repeating-linear-gradient(90deg, transparent 0 39px, rgba(242,238,227,0.05) 39px 40px),
-    linear-gradient(160deg, var(--felt) 0%, var(--felt-deep) 100%);
-}
-.case__ph b {
-  font-style: italic; font-weight: 700;
-  font-size: clamp(2.2rem, 8vw, 6rem); line-height: 0.9;
-  text-align: center; color: var(--paper); opacity: 0.94;
+.case--lead .case__media { aspect-ratio: 2 / 1; }     /* the 16:10 source, top-anchored, becomes a 2:1 crop */
+.case__media:focus-visible { outline: 3px solid var(--brass); outline-offset: 4px; }
+.case__shot {
+  position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+  object-fit: cover; object-position: 50% 0;
   transition: transform 0.9s var(--ease);
 }
-.case:hover .case__ph b { transform: scale(1.04); }
-.case__ph::after {
-  content: attr(data-tag); position: absolute; top: 1rem; left: 1rem;   /* bottom corners belong to the URL pill / status badge */
-  font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.12em;
-  text-transform: uppercase; color: rgba(242,238,227,0.62);
-}
-/* inset:0 inside an overflow:hidden tile clips a normal outline away
-   entirely, leaving the largest target on the page with no visible focus.
-   A negative offset draws the ring inside the clip box. */
-.case__media-link { position: absolute; inset: 0; z-index: 1; }
-.case__media-link:focus-visible { outline: 3px solid var(--brass); outline-offset: -6px; }
-.case__name { margin: 0; }
+@media (hover: hover) { .case:hover .case__shot { transform: scale(1.02); } }
 
-.case__url {
-  position: absolute; left: clamp(0.8rem, 1.5vw, 1.1rem); bottom: clamp(0.8rem, 1.5vw, 1.1rem); z-index: 2;
-  display: inline-flex; align-items: center; gap: 0.55em;
-  font-family: var(--mono); font-size: var(--step--1); color: var(--paper);
-  padding: 0.4em 0.8em; border: 1px solid rgba(242, 238, 227, 0.3); border-radius: 100px;
-  background: rgba(5, 31, 22, 0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  /* Sits above the full-tile link; without this it is a dead click zone
-     right on the most link-looking element in the tile. */
-  pointer-events: none;
-}
-.case__url i { width: 7px; height: 7px; border-radius: 50%; background: var(--brass); flex: none; animation: livePulse 2.4s cubic-bezier(0.76,0,0.24,1) infinite; }
-.case__badge {
-  position: absolute; right: clamp(0.8rem, 1.5vw, 1.1rem); bottom: clamp(0.8rem, 1.5vw, 1.1rem); z-index: 2;
-  font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--dim); padding: 0.4em 0.8em; border: 1px solid var(--line); border-radius: 100px;
-  background: rgba(5, 31, 22, 0.5);
-}
-.case__meta { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-top: clamp(0.9rem, 1.8vw, 1.4rem); flex-wrap: wrap; }
-.case__name { font-style: italic; font-weight: 700; font-size: var(--step-2); line-height: 1; }
+.case__meta { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem 1.5rem; margin-top: clamp(0.8rem, 1.5vw, 1.1rem); flex-wrap: wrap; }
+.case--lead .case__meta { justify-content: flex-start; }   /* role sits beside the name, not 1,200px away */
+.case__name { margin: 0; font-style: italic; font-weight: 700; font-size: var(--step-2); line-height: 1; }
 .case__role { font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
-.case__line { margin-top: 0.6rem; color: var(--dim); max-width: 58ch; font-size: var(--step-0); }
-.case__index { font-family: var(--mono); font-size: var(--step--1); color: var(--faint); }
+.case__line { margin-top: 0.45rem; color: var(--dim); max-width: 58ch; font-size: var(--step-0); }
+.case__receipt { margin-top: 0.55rem; max-width: 58ch; font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.04em; line-height: 1.6; color: var(--faint); }
+.case__receipt b { color: var(--brass); font-weight: 400; white-space: nowrap; }   /* the numbers: brass AND bold-by-position, never hue alone */
+.case__visit, .case__status {
+  display: inline-flex; align-items: center; gap: 0.55em; margin-top: 0.6rem; padding-block: 0.25rem;
+  font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase;
+}
+.case__visit { position: relative; color: var(--paper); }
+.case__visit::after {
+  content: ""; position: absolute; left: 0; bottom: 0; width: 100%; height: 1px;
+  background: currentColor; transform: scaleX(0.28); transform-origin: 0 50%;
+  transition: transform 0.45s var(--ease);
+}
+.case__visit:hover::after { transform: scaleX(1); }
+.case__visit i { width: 7px; height: 7px; border-radius: 50%; background: var(--brass); flex: none; animation: livePulse 2.4s cubic-bezier(0.76,0,0.24,1) infinite; }
+.case__status { color: var(--faint); }
+
+@media (max-width: 880px) {
+  .work__grid { grid-template-columns: 1fr; }
+  .case--lead .case__media { aspect-ratio: 16 / 10; }
+  .case--lead .case__meta { justify-content: space-between; }
+}
+@media (max-width: 760px) {
+  .work__head .eyebrow { display: none; }
+  .work__title { font-size: var(--step-2); line-height: 1; }
+  .case__media, .case--lead .case__media { aspect-ratio: 5 / 4; }   /* = the 390×312 phone crop, 1:1 scale */
+}
 
 /* ---- Studio ---- */
 .studio__grid { display: grid; grid-template-columns: 1fr; gap: clamp(2.5rem, 6vw, 5rem); }
@@ -574,6 +489,19 @@ html:not(.curtain) .loader { display: none; }
 @media (max-width: 560px) { .studio__stats { grid-template-columns: 1fr 1fr; } }
 .stat__n { font-style: italic; font-weight: 700; font-size: var(--step-2); line-height: 0.95; white-space: nowrap; color: var(--brass); }
 .stat__l { font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-top: 0.6rem; }
+.studio__stats a { display: block; color: inherit; }
+@media (hover: hover) { .studio__stats a:hover .stat__l { color: var(--paper); } }
+@media (max-width: 560px) {
+  .studio__stats { display: block; margin-top: 2rem; padding-top: 0; border-top: 0; }
+  .studio__stats > div { border-top: 1px solid var(--line); }
+  .studio__stats a { display: flex; align-items: baseline; gap: 0.9rem; padding: 0.6rem 0; }
+  .stat__n { font-size: var(--step-1); min-width: 5.5ch; }
+  .stat__l { margin-top: 0; }
+}
+@media (max-width: 760px) {
+  /* The touch surface is invisible at rest; seven lines describing it are a claim the phone cannot show. */
+  html[data-field] .studio__note { display: none; }
+}
 
 /* ---- CTA ---- */
 .cta { text-align: center; }
@@ -630,12 +558,6 @@ html:not(.curtain) .loader { display: none; }
      phone emits a single clipped page. */
   body { position: static !important; inset: auto !important; }
   .scroll-root { position: static !important; overflow: visible !important; }
-  .case__url, .case__badge { background: none; color: #333; border-color: #bbb; }
-  /* These two carry hard-coded dark literals that escape the token remap
-     above, so they printed as near-black slabs. */
-  .case__media, .case__media--image, .case__ph { background: #fff !important; }
-  .case__ph b { color: #111 !important; }
-  .case__ph::after { color: #555 !important; }
 }
 
 /* ---- Reduced motion ---- */
@@ -740,116 +662,96 @@ html:not(.curtain) .loader { display: none; }
   <!-- ===== WORK ===== -->
   <section class="section work wrap" id="work">
     <div class="work__head">
-      <h2 class="work__title" data-reveal>Selected<br>Work</h2>
+      <h2 class="work__title" data-reveal>Selected work</h2>
       <p class="eyebrow" data-reveal>(01) Case studies</p>
     </div>
 
     <div class="work__grid">
 
-      <!-- 01 Icenomics -->
-      <article class="case" data-reveal>
-        <div class="case__media case__media--image">
-          <a class="case__media-link" href="https://jcurry44.github.io/Icenomics" target="_blank" rel="noopener" data-cursor="VISIT" aria-label="Visit Icenomics"></a>
-          <!-- 1400x467 with intrinsic dimensions so the tile reserves its box
-               and never shifts layout. Was a 413KB PNG; webp is 19KB. -->
+      <!-- 01 Public Ledger — leads: newest, live, and where residents arrive (#public-ledger + the back pill) -->
+      <article class="case case--lead" id="public-ledger" data-reveal>
+        <a class="case__media" href="https://jcurry44.github.io/public-ledger/" target="_blank" rel="noopener" data-cursor="VISIT">
           <picture>
-            <source srcset="icenomics-banner.webp" type="image/webp" />
-            <img class="case__image" src="icenomics-banner.jpg"
-                 alt="Icenomics — hockey market intelligence"
-                 width="1400" height="467" loading="lazy" decoding="async" />
+            <source media="(max-width: 760px)" type="image/webp" srcset="cases/pl-phone.webp" />
+            <source media="(max-width: 760px)" type="image/jpeg" srcset="cases/pl-phone.jpg" />
+            <source type="image/webp" srcset="cases/pl-desk.webp" />
+            <img class="case__shot" src="cases/pl-desk.jpg" width="2000" height="1250"
+                 alt="Public Ledger, front page: ‘The council approved $1.59 million in bills’, the where-it-went bars, and the 52-of-52 warrants tie"
+                 loading="eager" fetchpriority="high" decoding="async" />
           </picture>
-          <!-- Visual affordance only: the full-tile link above already goes
-               here, so exposing this as a second link to the same URL would
-               make a screen reader read the destination twice (WCAG H2). -->
-          <span class="case__url" aria-hidden="true"><i></i>jcurry44.github.io/Icenomics</span>
-        </div>
-        <div class="case__meta">
-          <h3 class="case__name">Icenomics</h3>
-          <span class="case__role">Concept · Data · Build · Operation</span>
-        </div>
-        <p class="case__line">A live market-intelligence platform that prices professional hockey contracts: 2,000+ interactive asset pages, forecast models with published accuracy, a what-if trade simulator, and automated daily data operations. Its arbitration forecasts are pre-registered and publicly anchored before the hearings — a data product built end-to-end and run by one person.</p>
-        <span class="case__index">01 / 04</span>
-      </article>
-
-      <!-- 02 Public Ledger -->
-      <article class="case" id="public-ledger" data-reveal>
-        <div class="case__media">
-          <a class="case__media-link" href="https://jcurry44.github.io/public-ledger/" target="_blank" rel="noopener" data-cursor="VISIT" aria-label="Visit Public Ledger"></a>
-          <div class="case__ph" data-tag="Civic data" aria-hidden="true"><b>Public<br>Ledger</b></div>
-          <span class="case__url" aria-hidden="true"><i></i>jcurry44.github.io/public-ledger</span>
-        </div>
+        </a>
         <div class="case__meta">
           <h3 class="case__name">Public Ledger</h3>
-          <span class="case__role">Data · Verification · Build · Operation</span>
+          <span class="case__role">Data · Build · Daily ops</span>
         </div>
-        <p class="case__line">A city's published finances, made checkable: 12,637 approved claims parsed from the public record, reconciled against the city's own printed control totals — all 52 warrants tie to the penny (six read by OCR from scanned images), and the build refuses to publish if one stops tying. Auto-generated council briefs for every meeting, a 67-flag exception report, and a county edition reconciling $69.1M of shared sales tax across 21 governments to within 0.14%.</p>
-        <span class="case__index">02 / 04</span>
+        <p class="case__line">North Tonawanda’s checkbook, made checkable: every claim the council approved, parsed from the City’s own PDFs and tied to its printed totals.</p>
+        <p class="case__receipt"><b>12,637</b> claims · <b>52 of 52</b> warrants tie to the penny · <b>67</b> flags</p>
+        <a class="case__visit" href="https://jcurry44.github.io/public-ledger/" target="_blank" rel="noopener" data-cursor="VISIT"><i></i>Open Public Ledger ↗</a>
       </article>
 
-      <!-- 03 Nicastro -->
-      <article class="case" data-reveal>
+      <!-- 02 The Grants Ledger -->
+      <article class="case" id="grants-ledger" data-reveal>
+        <a class="case__media" href="https://jcurry44.github.io/grants-ledgers/" target="_blank" rel="noopener" data-cursor="VISIT">
+          <picture>
+            <source media="(max-width: 760px)" type="image/webp" srcset="cases/gl-phone.webp" />
+            <source media="(max-width: 760px)" type="image/jpeg" srcset="cases/gl-phone.jpg" />
+            <source type="image/webp" srcset="cases/gl-desk.webp" />
+            <img class="case__shot" src="cases/gl-desk.jpg" width="2000" height="1250"
+                 alt="The Grants Ledger, home: ‘Grant ledgers for 1,935 U.S. foundations, reconciled to the dollar’, the search box and the dollars-reconciled counter"
+                 loading="lazy" decoding="async" />
+          </picture>
+        </a>
+        <div class="case__meta">
+          <h3 class="case__name">The Grants Ledger</h3>
+          <span class="case__role">Data · Build · Ops</span>
+        </div>
+        <p class="case__line">A page per foundation of what 1,935 U.S. private foundations actually filed, rebuilt from their own IRS 990-PF returns and reconciled to the dollar.</p>
+        <p class="case__receipt"><b>1,935</b> foundations · <b>1,446,521</b> filed rows · <b>$303.9B</b> reconciled</p>
+        <a class="case__visit" href="https://jcurry44.github.io/grants-ledgers/" target="_blank" rel="noopener" data-cursor="VISIT"><i></i>Open The Grants Ledger ↗</a>
+      </article>
+
+      <!-- 03 Nicastro — not linked while the owners review it -->
+      <article class="case" id="nicastro" data-reveal>
         <div class="case__media">
-          <div class="case__ph" data-tag="Client build" aria-hidden="true"><b>Nicastro<br>Accounting</b></div>
-          <span class="case__badge">In owner review</span>
+          <picture>
+            <source media="(max-width: 760px)" type="image/webp" srcset="cases/nic-phone.webp" />
+            <source media="(max-width: 760px)" type="image/jpeg" srcset="cases/nic-phone.jpg" />
+            <source type="image/webp" srcset="cases/nic-desk.webp" />
+            <img class="case__shot" src="cases/nic-desk.jpg" width="2000" height="1250"
+                 alt="Nicastro Accounting, home: ‘Clarity, down to the last line’, beside a live ledger card that balances to 0.00"
+                 loading="lazy" decoding="async" />
+          </picture>
         </div>
         <div class="case__meta">
           <h3 class="case__name">Nicastro Accounting</h3>
           <span class="case__role">Design · Build</span>
         </div>
-        <p class="case__line">Site design and build for a Western New York accounting firm: a living-ledger hero, a tax-deadline radar, and a personalized document-checklist builder. A site that works the way the firm does — precise, calm, and useful before the first phone call.</p>
-        <span class="case__index">03 / 04</span>
+        <p class="case__line">A North Tonawanda accounting firm’s site that computes: a living ledger that balances on load, a tax-deadline radar, and a document-checklist builder.</p>
+        <p class="case__receipt">Client build · <b>one file</b>, no framework · phone-first</p>
+        <span class="case__status">In owner review</span>
       </article>
 
-      <!-- 04 The Grants Ledger -->
-      <article class="case" data-reveal>
-        <div class="case__media">
-          <a class="case__media-link" href="https://jcurry44.github.io/grants-ledgers/" target="_blank" rel="noopener" data-cursor="VISIT" aria-label="Visit The Grants Ledger"></a>
-          <div class="case__ph" data-tag="Data · Research" aria-hidden="true"><b>The Grants<br>Ledger</b></div>
-          <span class="case__url" aria-hidden="true"><i></i>jcurry44.github.io/grants-ledgers</span>
-        </div>
+      <!-- 04 Icenomics -->
+      <article class="case" id="icenomics" data-reveal>
+        <a class="case__media" href="https://jcurry44.github.io/Icenomics/" target="_blank" rel="noopener" data-cursor="VISIT">
+          <picture>
+            <source media="(max-width: 760px)" type="image/webp" srcset="cases/ice-phone.webp" />
+            <source media="(max-width: 760px)" type="image/jpeg" srcset="cases/ice-phone.jpg" />
+            <source type="image/webp" srcset="cases/ice-desk.webp" />
+            <img class="case__shot" src="cases/ice-desk.jpg" width="2000" height="1250"
+                 alt="Icenomics, home: ‘The public NHL front office that keeps a book’, the 2026 arbitration slate and the player search"
+                 loading="lazy" decoding="async" />
+          </picture>
+        </a>
         <div class="case__meta">
-          <h3 class="case__name">The Grants Ledger</h3>
-          <span class="case__role">Data · Build · Operation</span>
+          <h3 class="case__name">Icenomics</h3>
+          <span class="case__role">Concept · Data · Build · Ops</span>
         </div>
-        <p class="case__line">A page-per-foundation record of grantmaking by nearly two thousand major U.S. private foundations, built from public IRS Form 990-PF filings — every year reconciled to the filed total, to the dollar, including grant lists that exist only as scanned paper and never reached the e-file datasets.</p>
-        <span class="case__index">04 / 04</span>
+        <p class="case__line">The public NHL front office that keeps a book: contract models with published accuracy, and arbitration calls frozen and anchored before each hearing.</p>
+        <p class="case__receipt"><b>2,000+</b> player pages · forecasts <b>pre-registered</b> · data ops <b>daily</b></p>
+        <a class="case__visit" href="https://jcurry44.github.io/Icenomics/" target="_blank" rel="noopener" data-cursor="VISIT"><i></i>Open Icenomics ↗</a>
       </article>
 
-    </div>
-  </section>
-
-  <!-- ===== CAPABILITIES ===== -->
-  <section class="section cap wrap">
-    <div class="cap__head">
-      <h2 class="cap__title" data-reveal>Capabilities</h2>
-      <p class="eyebrow" data-reveal>(02) What I do</p>
-    </div>
-    <div class="cap__list">
-      <div class="cap__item" data-reveal>
-        <span class="cap__num">01</span>
-        <span class="cap__name">Concept &amp; Strategy</span>
-        <span class="cap__desc">What to build, what to measure, and why it will work.</span>
-      </div>
-      <div class="cap__item" data-reveal>
-        <span class="cap__num">02</span>
-        <span class="cap__name">Design &amp; Build</span>
-        <span class="cap__desc">Hand-built sites and web apps — every page drawn and coded for the job, never a template.</span>
-      </div>
-      <div class="cap__item" data-reveal>
-        <span class="cap__num">03</span>
-        <span class="cap__name">Data &amp; Modeling</span>
-        <span class="cap__desc">Databases, dashboards, and forecasts — products that make decisions, not just pages.</span>
-      </div>
-      <div class="cap__item" data-reveal>
-        <span class="cap__num">04</span>
-        <span class="cap__name">AI Integration</span>
-        <span class="cap__desc">LLM features that do real work inside your product, with review built in.</span>
-      </div>
-      <div class="cap__item" data-reveal>
-        <span class="cap__num">05</span>
-        <span class="cap__name">Operation</span>
-        <span class="cap__desc">I run what I ship — monitoring, updates, and daily automated data ops.</span>
-      </div>
     </div>
   </section>
 
@@ -857,7 +759,7 @@ html:not(.curtain) .loader { display: none; }
   <section class="section eng-sec wrap" id="engagements">
     <div class="eng__head">
       <h2 class="eng__title" data-reveal>Engagements</h2>
-      <p class="eyebrow" data-reveal>(03) What to hire</p>
+      <p class="eyebrow" data-reveal>(02) What to hire</p>
     </div>
     <p class="eng__lede" data-reveal>Built in Buffalo for Western New York businesses and practices that
       run on spreadsheets — three fixed-shape ways to start, each delivered as a working thing, not a
@@ -866,26 +768,19 @@ html:not(.curtain) .loader { display: none; }
       <article class="eng" data-reveal>
         <span class="eng__num">E·01</span>
         <h3 class="eng__name">Business Health Dashboard</h3>
-        <p class="eng__desc">Your existing exports — QuickBooks, payroll, bank — become one
-          exception-first dashboard: what's owed to you and aging, which jobs are burning faster than
-          they're billing, where the month actually went. Mapped once; every later month is a
-          re-drop, not a project.</p>
+        <p class="eng__desc">Your QuickBooks, payroll and bank exports become one exception-first dashboard: what’s owed and aging, which jobs burn faster than they bill, where the month went. Mapped once, re-dropped monthly.</p>
         <span class="eng__shape">Scoped setup + monthly run rate</span>
       </article>
       <article class="eng" data-reveal>
         <span class="eng__num">E·02</span>
         <h3 class="eng__name">The Monthly Brief</h3>
-        <p class="eng__desc">A one-page reconciled brief on your books that refuses to render unless it
-          ties to your own statements' printed totals — flags framed as questions with their resolution
-          paths, every number traceable to its source line.</p>
+        <p class="eng__desc">A one-page brief on your books that refuses to render unless it ties to your statements’ printed totals. Flags framed as questions, every number traceable to its source line.</p>
         <span class="eng__shape">Per month · per entity</span>
       </article>
       <article class="eng" data-reveal>
         <span class="eng__num">E·03</span>
         <h3 class="eng__name">Sites &amp; tools that compute</h3>
-        <p class="eng__desc">Hand-built sites and working tools — estimators, checklist builders,
-          decision aids — designed, built, deployed, and then actually run: monitoring, updates, and
-          daily data operations included.</p>
+        <p class="eng__desc">Hand-built sites and working tools — estimators, checklist builders, decision aids — designed, built, deployed, then actually run: monitoring, updates and daily data ops included.</p>
         <span class="eng__shape">Project-scoped · build + run</span>
       </article>
     </div>
@@ -895,7 +790,7 @@ html:not(.curtain) .loader { display: none; }
 
   <!-- ===== STUDIO ===== -->
   <section class="section studio wrap" id="studio">
-    <p class="eyebrow" data-reveal style="margin-bottom: clamp(2rem, 5vw, 4rem)">(04) Studio</p>
+    <p class="eyebrow" data-reveal style="margin-bottom: clamp(2rem, 5vw, 4rem)">(03) Studio</p>
     <div class="studio__grid">
       <h2 class="studio__lead"><span class="lm"><span>The whole job,</span></span><span class="lm"><span>one pair of hands.</span></span></h2>
       <div class="studio__body">
@@ -903,9 +798,9 @@ html:not(.curtain) .loader { display: none; }
         <p data-reveal class="studio__note studio__note--fit">The background of this page is a live weighted least-squares model — a curve continuously re-fit through drifting data points, and any you scatter with your pointer. That’s the studio in one image: signal from noise, computed in front of you.</p>
         <p data-reveal class="studio__note studio__note--signal">The background is a live signal surface — quiet at rest, responsive to touch, and designed to resolve back to clarity. That’s the studio in one image: input becomes a deliberate, computed response.</p>
         <div class="studio__stats">
-          <div data-reveal><div class="stat__n">Start→Run</div><div class="stat__l">Concept through operation</div></div>
-          <div data-reveal><div class="stat__n">1 builder</div><div class="stat__l">Direct line, no hand-offs</div></div>
-          <div data-reveal><div class="stat__n">Daily</div><div class="stat__l">Automated ops on live products</div></div>
+          <div data-reveal><a href="#public-ledger"><div class="stat__n">52 / 52</div><div class="stat__l">Warrants tie to the penny</div></a></div>
+          <div data-reveal><a href="#grants-ledger"><div class="stat__n">1,935</div><div class="stat__l">Foundations reconciled</div></a></div>
+          <div data-reveal><a href="#icenomics"><div class="stat__n">2,000+</div><div class="stat__l">Player pages, run daily</div></a></div>
         </div>
       </div>
     </div>
@@ -913,19 +808,11 @@ html:not(.curtain) .loader { display: none; }
 
   <!-- ===== CTA ===== -->
   <section class="section cta wrap" id="contact">
-    <p class="eyebrow" data-reveal style="margin-bottom: clamp(1.5rem, 3vw, 2.5rem)">(05) Contact</p>
+    <p class="eyebrow" data-reveal style="margin-bottom: clamp(1.5rem, 3vw, 2.5rem)">(04) Contact</p>
     <h2 class="cta__line"><span class="lm"><span>Have a thing that</span></span><span class="lm"><span>should compute?</span></span></h2>
-    <a href="mailto:jjcurry027@gmail.com" class="cta__btn" data-cursor="EMAIL">
+    <a href="mailto:jjcurry027@gmail.com?subject=A%20thing%20that%20should%20compute" class="cta__btn" data-cursor="EMAIL">
       <span class="dot"></span> jjcurry027@gmail.com
     </a>
-    <form class="cform" id="cform" data-reveal novalidate>
-      <label><em>Your name</em><input type="text" name="name" id="cf-name" autocomplete="name"></label>
-      <label><em>Email</em><input type="email" name="email" id="cf-email" autocomplete="email"></label>
-      <label><em>The thing that should compute</em><textarea name="message" id="cf-msg"
-        placeholder="A report you rebuild by hand every month, a number nobody can check, a quote that takes all weekend…"></textarea></label>
-      <button type="submit" data-cursor="SEND">Send it</button>
-      <p class="cform__status" id="cf-status" role="status"></p>
-    </form>
     <div class="cta__diligence" data-reveal>
       <span class="cta__diligence-lead">Diligence</span>
       <a href="https://www.linkedin.com/in/joseph-curry-940738129/" target="_blank" rel="me noopener" data-cursor="LINKEDIN">LinkedIn ↗</a>
@@ -1015,40 +902,6 @@ html:not(.curtain) .loader { display: none; }
   /* ---- Footer year ---- */
   const yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
-
-  /* ---- Contact form ----
-     FORM_ENDPOINT: paste a Formspree-style URL to POST directly.
-     While empty, submit falls back to a prefilled mailto — a lead is
-     never silently dropped, whichever state the endpoint is in. */
-  const FORM_ENDPOINT = "";
-  const cform = document.getElementById("cform");
-  if (cform) cform.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name = document.getElementById("cf-name").value.trim();
-    const email = document.getElementById("cf-email").value.trim();
-    const msg = document.getElementById("cf-msg").value.trim();
-    const status = document.getElementById("cf-status");
-    if (!msg && !email) { status.textContent = "An email or a message — one of the two, at least."; return; }
-    if (FORM_ENDPOINT) {
-      status.textContent = "Sending…";
-      try {
-        const r = await fetch(FORM_ENDPOINT, {
-          method: "POST", headers: { "Accept": "application/json", "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email, message: msg })
-        });
-        if (!r.ok) throw new Error("HTTP " + r.status);
-        status.textContent = "Sent — I read these same-day.";
-        cform.reset();
-      } catch (err) {
-        status.textContent = "That didn't go through — email me directly: jjcurry027@gmail.com";
-      }
-    } else {
-      const body = encodeURIComponent((msg || "") + (name ? "\n\n— " + name : "") + (email ? " (" + email + ")" : ""));
-      window.location.href = "mailto:jjcurry027@gmail.com?subject=" +
-        encodeURIComponent("A thing that should compute") + "&body=" + body;
-      status.textContent = "Opening your mail app — or just email jjcurry027@gmail.com";
-    }
-  });
 
   /* ---- Loader (watchdog first: rAF doesn't tick in background tabs,
           and a page must never trap itself behind its own curtain) ---- */
