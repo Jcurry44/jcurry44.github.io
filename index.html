@@ -76,6 +76,10 @@ body {
 /* Focusables need it too — tabbing to a link near a section top otherwise
    scrolls it under the fixed header, where the focus ring is invisible. */
 a, button, input, textarea, select, [tabindex] { scroll-margin-top: calc(var(--header-h) + 1rem); }
+/* a section lands flush under the solid bar: no stray hairline of the marquee above it (Fable 10-29) */
+.section[id] { scroll-margin-top: calc(var(--header-h) - 1px); }
+/* small text links keep a 44px thumb zone on a phone (no visual change) */
+.hero__action::before, .case__visit::before, .cta__diligence a::before { content: ""; position: absolute; inset: -8px 0; }
 a { color: inherit; text-decoration: none; }
 ::selection { background: var(--brass); color: var(--felt); }
 :focus-visible { outline: 2px solid var(--brass); outline-offset: 4px; }
