@@ -770,7 +770,7 @@ html:not(.curtain) .loader { display: none; }
       </article>
 
       <!-- 02 Public Ledger -->
-      <article class="case" data-reveal>
+      <article class="case" id="public-ledger" data-reveal>
         <div class="case__media">
           <a class="case__media-link" href="https://jcurry44.github.io/public-ledger/" target="_blank" rel="noopener" data-cursor="VISIT" aria-label="Visit Public Ledger"></a>
           <div class="case__ph" data-tag="Civic data" aria-hidden="true"><b>Public<br>Ledger</b></div>
@@ -1494,6 +1494,25 @@ html:not(.curtain) .loader { display: none; }
   } else {
     runLoader(boot);
   }
+})();
+</script>
+<!-- the way back for a resident who followed Public Ledger's credit: a slim band, only when they came from it -->
+<script>
+(function(){
+  try{
+    var ref=document.referrer||'', fromPL=/jcurry44\.github\.io\/public-ledger/.test(ref), viaHash=location.hash==='#public-ledger';
+    if(!fromPL && !viaHash) return;
+    var back=fromPL ? ref : 'https://jcurry44.github.io/public-ledger/';
+    var b=document.createElement('a');
+    b.href=back; b.textContent='← Back to Public Ledger';
+    b.setAttribute('aria-label','Back to Public Ledger, the North Tonawanda spending site');
+    b.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));z-index:9999;display:inline-flex;'+
+      'align-items:center;justify-content:center;min-height:48px;padding:0 22px;border-radius:99px;background:var(--paper);color:var(--felt-deep);'+
+      'font:600 15px/1 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;text-decoration:none;white-space:nowrap;box-shadow:0 10px 30px -8px rgba(0,0,0,.6)';
+    document.body.appendChild(b);
+    var card=document.getElementById('public-ledger');
+    if(card && !viaHash) setTimeout(function(){ card.scrollIntoView({block:'start'}); }, 60);
+  }catch(e){}
 })();
 </script>
 </body>
