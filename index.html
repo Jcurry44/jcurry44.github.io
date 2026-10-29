@@ -178,11 +178,13 @@ html:not(.curtain) .loader { display: none; }
   position: fixed; inset: 0 0 auto 0; z-index: 8000;
   height: var(--header-h); display: flex; align-items: center;
   pointer-events: none;
+  background: var(--felt-deep);      /* solid: the page never reads through the bar (the ::before fades below it) */
 }
 .header a { pointer-events: auto; }
 .header::before {
   content: ""; position: absolute; inset: -1px 0 -35% 0; z-index: -1;
-  background: linear-gradient(to bottom, rgba(5, 31, 22, 0.88) 0%, rgba(5, 31, 22, 0.45) 55%, rgba(5, 31, 22, 0) 100%);
+  /* solid behind the bar itself (74% of this layer = the header's height), then a soft fade: text never reads through the header */
+  background: linear-gradient(to bottom, rgba(5, 31, 22, 0.97) 0%, rgba(5, 31, 22, 0.97) 74%, rgba(5, 31, 22, 0) 100%);
 }
 .header__row {
   width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter);
