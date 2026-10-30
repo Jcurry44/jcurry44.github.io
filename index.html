@@ -4,14 +4,14 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Joe Curry · Product &amp; data studio</title>
-<meta name="description" content="Joe Curry is an independent product and data studio. Design, build, data, AI, and operation — sites and software that compute, run daily, and keep working after launch." />
+<meta name="description" content="Websites, dashboards and data tools for businesses that have outgrown their spreadsheets, designed, built, checked and kept running by Joe Curry, an independent studio in Buffalo, NY." />
 <meta name="theme-color" content="#082f22" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23082f22'/%3E%3Cpath d='M22 70 Q50 18 80 52' stroke='%23d6b15c' stroke-width='6' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='34' cy='44' r='4' fill='%23f2eee3'/%3E%3Ccircle cx='58' cy='60' r='4' fill='%23f2eee3'/%3E%3C/svg%3E" />
 
 <!-- Open Graph -->
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Joe Curry · Product &amp; data studio" />
-<meta property="og:description" content="Design, build, data, AI, and operation — software that computes and keeps working after launch." />
+<meta property="og:description" content="Websites, dashboards and data tools for businesses that have outgrown their spreadsheets. Designed, built, checked and kept running by one person." />
 <meta property="og:url" content="https://jcurry44.github.io/" />
 <meta property="og:image" content="https://jcurry44.github.io/og-card.png" />
 <meta property="og:image:width" content="1200" />
@@ -130,23 +130,29 @@ a { color: inherit; text-decoration: none; }
   .grain { opacity: 0.025; mix-blend-mode: soft-light; }
 }
 
-/* ---- Cursor (ships hidden; JS reveals on first move) ---- */
-.cursor {
-  position: fixed; top: 0; left: 0; z-index: 9500;
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--paper);
-  pointer-events: none; transform: translate(-50%, -50%);
-  transition: width 0.35s var(--ease), height 0.35s var(--ease), opacity 0.3s;
-  display: grid; place-items: center;
-  font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--felt);
+
+/* ---- Skip link (first Tab stop) ---- */
+.skip {
+  position: fixed; left: var(--gutter); top: 0.6rem; z-index: 9900;
+  padding: 0.75rem 1.1rem; background: var(--paper); color: var(--felt);
+  font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase;
+  transform: translateY(-220%);
 }
-.cursor[data-variant="hover"] { width: 48px; height: 48px; }
-.cursor[data-variant="label"] { width: 84px; height: 84px; }
-.cursor__label { opacity: 0; transition: opacity 0.2s; }
-.cursor[data-variant="label"] .cursor__label { opacity: 1; }
-.cursor.is-hidden { opacity: 0; }
-@media (hover: none), (pointer: coarse) { .cursor { display: none; } }
+.skip:focus { transform: none; }
+
+/* ---- Motion control: one switch stops every moving thing (WCAG 2.2.2) ---- */
+.motion-btn {
+  display: none; position: relative; align-items: center; gap: 0.5em;
+  background: none; border: 0; padding: 0; color: inherit; cursor: pointer;
+  font: inherit; letter-spacing: inherit; text-transform: inherit;
+}
+.can-motion .motion-btn { display: inline-flex; }
+.motion-btn::before { content: ""; position: absolute; left: -8px; right: -8px; top: 50%; height: 44px; transform: translateY(-50%); }
+.motion-btn i { width: 7px; height: 7px; border-radius: 50%; border: 1px solid currentColor; }
+.motion-off .motion-btn i { background: currentColor; }
+.motion-btn:hover { color: var(--paper); }
+html.motion-off, html.motion-off *, html.motion-off *::before, html.motion-off *::after { animation: none !important; scroll-behavior: auto !important; }
+html.motion-off [data-reveal], html.motion-off .lm > span { opacity: 1 !important; transform: none !important; transition: none !important; }
 
 /* ---- Scroll progress ---- */
 .progress {
@@ -155,27 +161,6 @@ a { color: inherit; text-decoration: none; }
   background: var(--brass); z-index: 9400; pointer-events: none;
 }
 
-/* ---- Loader ---- */
-.loader {
-  position: fixed; inset: 0; z-index: 9800;
-  background: var(--felt-deep); color: var(--fg);
-  display: grid; place-items: center;
-  transition: transform 0.8s cubic-bezier(0.76, 0, 0.24, 1);
-}
-.loader.is-leaving { transform: translateY(-100%); pointer-events: none; }
-.loader.is-done { display: none; }
-.loader > div { text-align: center; }   /* the mark must center over the bar, not left-align to it */
-.loader__mark { font-style: italic; font-weight: 700; font-size: clamp(3.5rem, 15vw, 10rem); line-height: 0.9; }
-.loader__count { font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.2em; margin-top: 1rem; color: var(--dim); text-align: center; }
-.loader__bar { height: 2px; width: min(56vw, 320px); margin: 1.2rem auto 0; background: rgba(242,238,227,0.12); overflow: hidden; }
-.loader__bar i { display: block; height: 100%; width: 0%; background: var(--brass); }
-/* The curtain must claim the screen BEFORE content paints, or it drops on
-   top of an already-visible page — which is what it did when the only gate
-   was the end-of-body script. A head script adds .curtain instead.
-   Failsafe: if that end-of-body script never runs (so .js never appears),
-   this CSS animation lifts the curtain on its own at 2.6s. No JS path can
-   leave a visitor stuck behind it. */
-html:not(.curtain) .loader { display: none; }
 
 /* ---- Header (strip never intercepts; only links do) ---- */
 .header {
@@ -184,7 +169,7 @@ html:not(.curtain) .loader { display: none; }
   pointer-events: none;
   background: var(--felt-deep);      /* solid: the page never reads through the bar */
 }
-.header a { pointer-events: auto; }
+.header a, .header button { pointer-events: auto; }
 .header__row {
   width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter);
   display: flex; align-items: center; justify-content: space-between; gap: 1rem;
@@ -198,9 +183,13 @@ html:not(.curtain) .loader { display: none; }
   background: currentColor; transform: scaleX(0); transform-origin: 100% 50%;
   transition: transform 0.45s var(--ease);
 }
-.header__meta .nav-links a:hover::after { transform: scaleX(1); transform-origin: 0 50%; }
-.clock { font-variant-numeric: tabular-nums; }
-@media (max-width: 720px) { .header__meta .nav-links, .header__meta .clock { display: none; } }
+@media (hover: hover) { .header__meta .nav-links a:hover::after { transform: scaleX(1); transform-origin: 0 50%; } }
+.header__meta .nav-links a::before { content: ""; position: absolute; left: -6px; right: -6px; top: 50%; height: 44px; transform: translateY(-50%); }
+@media (max-width: 720px) {
+  .header__meta .hdr-ext, .header__meta .motion-btn, .nav-links .nav-desk { display: none; }
+  .header__meta { letter-spacing: 0.06em; }
+  .header__meta .nav-links { gap: clamp(0.75rem, 3.6vw, 1.15rem); }
+}
 
 /* ---- Hero ---- */
 .hero {
@@ -278,7 +267,7 @@ html:not(.curtain) .loader { display: none; }
 }
 .hero__wordmark {
   font-style: italic; font-weight: 700;
-  font-size: var(--display-xl); line-height: 0.92; letter-spacing: -0.03em;
+  font-size: min(var(--display-xl), 31svh); line-height: 0.92; letter-spacing: -0.03em;   /* height-capped: a laptop window keeps the whole hero (Fable 10-29) */
   margin-left: -0.03em;
 }
 .hero__foot {
@@ -313,6 +302,10 @@ html:not(.curtain) .loader { display: none; }
 .hero__hud .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brass); animation: livePulse 2.4s cubic-bezier(0.76,0,0.24,1) infinite; }
 .hero__hud b { color: var(--brass); font-weight: 400; }
 @keyframes livePulse { 0%,100%{ opacity: 1 } 50%{ opacity: 0.35 } }
+.hero--stack { min-height: auto; justify-content: initial; padding-top: calc(var(--header-h) + 1.4rem); }
+.hero--stack .hero__topline { position: static; }
+.hero--stack .hero__intro { position: static; width: auto; max-width: 38rem; margin-top: 1.4rem; }
+.hero--stack .hero__wordmark { margin-top: clamp(1.4rem, 4svh, 2.4rem); font-size: min(var(--display-xl), max(6rem, 34svh)); }
 @media (max-width: 760px) {
   .hero {
     min-height: auto;
@@ -324,7 +317,6 @@ html:not(.curtain) .loader { display: none; }
   .hero__intro { position: static; width: auto; max-width: 27rem; margin-top: 2rem; }
   .hero__intro-copy { font-size: clamp(1.3rem, 5.8vw, 1.75rem); max-width: 25ch; }
   .hero__actions { margin-top: 1.2rem; }
-  .hero__action:not(.hero__action--primary) { display: none; }
   .hero__wordmark {
     margin-top: 1.5rem;
     font-size: clamp(5.8rem, 28vw, 8.6rem);
@@ -332,7 +324,6 @@ html:not(.curtain) .loader { display: none; }
     letter-spacing: -0.045em;
   }
   .hero__foot { display: none; }
-  .marquee { display: none; }
   .section { padding-block: 3rem; }
 }
 @media (max-width: 420px) {
@@ -373,7 +364,6 @@ html:not(.curtain) .loader { display: none; }
   .hero__intro-copy { font-size: clamp(1.05rem, 3vw, 1.4rem); }
   .hero__intro-copy span { display: none; }
   .hero__actions { margin-top: 0.75rem; }
-  .hero__action:not(.hero__action--primary) { display: none; }
   .hero__wordmark {
     grid-column: 2;
     grid-row: 1 / 3;
@@ -399,15 +389,6 @@ html:not(.curtain) .loader { display: none; }
 .js [data-reveal] { opacity: 0; transform: translateY(26px); transition: opacity 0.85s var(--ease), transform 0.85s var(--ease); }
 .js [data-reveal].in { opacity: 1; transform: translateY(0); }
 
-/* ---- Marquee ---- */
-.marquee { border-block: 1px solid var(--line); overflow: hidden; white-space: nowrap; padding-block: clamp(0.7rem, 1.4vw, 1rem); user-select: none; }
-.marquee__track { display: inline-flex; will-change: transform; }
-.marquee__track span {
-  font-style: italic; font-weight: 700;
-  font-size: clamp(1.4rem, 4vw, 3rem);
-  padding-inline: 0.55em; display: inline-flex; align-items: center; gap: 0.55em;
-}
-.marquee__track span::after { content: "×"; color: var(--brass); opacity: 0.55; font-style: normal; font-size: 0.6em; }
 
 /* ---- Engagements (productized offers) ---- */
 .eng__head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: clamp(1.5rem, 3.5vw, 2.5rem); flex-wrap: wrap; }
@@ -425,8 +406,14 @@ html:not(.curtain) .loader { display: none; }
 .eng__name { font-style: italic; font-weight: 700; font-size: var(--step-1); line-height: 1.15; }
 .eng__desc { font-size: var(--step-0); color: var(--dim); flex: 1; }
 .eng__shape { font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--brass); border-top: 1px solid var(--line); padding-top: 0.7rem; }
+.eng__fit { font-size: var(--step--1); color: var(--dim); line-height: 1.5; }
+.eng__fit b { font-family: var(--mono); font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); margin-right: 0.4em; }
+.eng__ask { position: relative; align-self: flex-start; font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--paper); text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--line); }
+.eng__ask::before { content: ""; position: absolute; left: -6px; right: -6px; top: 50%; height: 44px; transform: translateY(-50%); }
+.eng__ask:hover { text-decoration-color: var(--brass); }
 .eng__foot { margin-top: clamp(1.6rem, 3vw, 2.4rem); font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.06em; color: var(--faint); }
-.eng__foot a { color: var(--paper); text-underline-offset: 3px; }
+.eng__foot a { position: relative; color: var(--paper); text-underline-offset: 3px; }
+.eng__foot a::before { content: ""; position: absolute; left: -6px; right: -6px; top: 50%; height: 44px; transform: translateY(-50%); }
 
 /* ---- Work / case studies ---- */
 /* Real first screens of real products. Nothing is drawn over a screenshot:
@@ -471,6 +458,23 @@ html:not(.curtain) .loader { display: none; }
 .case__visit:hover::after { transform: scaleX(1); }
 .case__visit i { width: 7px; height: 7px; border-radius: 50%; background: var(--brass); flex: none; animation: livePulse 2.4s cubic-bezier(0.76,0,0.24,1) infinite; }
 .case__status { color: var(--faint); }
+.case__kind { display: block; margin-top: 0.35rem; font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+.case__kind b { color: var(--brass); font-weight: 400; }
+.case__story { margin-top: 0.9rem; max-width: 64rem; border-top: 1px solid var(--line); }
+.case__story > summary {
+  list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  min-height: 44px; padding-block: 0.5rem; font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--paper);
+}
+.case__story > summary::-webkit-details-marker { display: none; }
+.case__story > summary::after { content: "+"; font-size: 1.3em; line-height: 1; color: var(--brass); }
+.case__story[open] > summary::after { content: "\2212"; }
+.case__story dl { display: grid; grid-template-columns: minmax(8rem, 0.28fr) 1fr; gap: 0.9rem 2rem; padding: 0.6rem 0 1.4rem; }
+.case__story dt { font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--brass); padding-top: 0.2em; }
+.case__story dd { margin: 0; color: var(--dim); font-size: var(--step-0); line-height: 1.55; max-width: 62ch; }
+.case__story dd ol { margin: 0; padding-left: 1.2em; }
+.case__story dd li + li { margin-top: 0.35rem; }
+@media (max-width: 640px) { .case__story dl { grid-template-columns: 1fr; gap: 0.25rem; } .case__story dd { margin-bottom: 0.9rem; } }
 
 @media (max-width: 880px) {
   .work__grid { grid-template-columns: 1fr; }
@@ -478,7 +482,6 @@ html:not(.curtain) .loader { display: none; }
   .case--lead .case__meta { justify-content: space-between; }
 }
 @media (max-width: 760px) {
-  .work__head .eyebrow { display: none; }
   .work__title { font-size: var(--step-2); line-height: 1; }
   .case__media, .case--lead .case__media { aspect-ratio: 5 / 4; }   /* = the 390×312 phone crop, 1:1 scale */
 }
@@ -489,6 +492,11 @@ html:not(.curtain) .loader { display: none; }
 .studio__lead { font-style: italic; font-weight: 700; font-size: var(--step-2); line-height: 1.12; }
 .studio__body p { font-size: var(--step-1); line-height: 1.5; margin-bottom: 1.4rem; max-width: 56ch; color: var(--dim); }
 .studio__body p:last-child { margin-bottom: 0; }
+.studio__steps { list-style: none; margin: 0 0 1.4rem; padding: 0; counter-reset: st; border-top: 1px solid var(--line); }
+.studio__steps li { counter-increment: st; display: grid; grid-template-columns: 2.4rem 1fr; gap: 0.6rem; padding: 0.85rem 0; border-bottom: 1px solid var(--line); font-size: var(--step-0); color: var(--dim); line-height: 1.5; }
+.studio__steps li::before { content: "0" counter(st); font-family: var(--mono); font-size: var(--step--1); color: var(--brass); padding-top: 0.2em; }
+.studio__steps b { color: var(--paper); font-weight: 400; }
+.studio__h3 { font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); font-weight: 400; margin: 2.2rem 0 0.8rem; }
 .studio__stats { margin-top: clamp(2.5rem, 5vw, 4rem); display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; border-top: 1px solid var(--line); padding-top: clamp(1.5rem, 3vw, 2.5rem); }
 @media (max-width: 560px) { .studio__stats { grid-template-columns: 1fr 1fr; } }
 .stat__n { font-style: italic; font-weight: 700; font-size: var(--step-2); line-height: 0.95; white-space: nowrap; color: var(--brass); }
@@ -518,6 +526,12 @@ html:not(.curtain) .loader { display: none; }
 }
 .cta__btn:hover { background: var(--paper); color: var(--felt); }
 .cta__btn .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brass); }
+.cta__lede { max-width: 44ch; margin: clamp(1.4rem, 3vw, 2rem) auto 0; font-size: var(--step-1); line-height: 1.45; color: var(--dim); }
+.cta__addr { margin-top: 1.1rem; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.4rem 1.1rem; font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.06em; color: var(--dim); }
+.cta__copy { position: relative; background: none; border: 0; padding: 0; color: var(--paper); font: inherit; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--line); cursor: pointer; }
+.cta__copy::before { content: ""; position: absolute; left: -8px; right: -8px; top: 50%; height: 44px; transform: translateY(-50%); }
+.cta__copy:hover { text-decoration-color: var(--brass); }
+.cta__copied { color: var(--brass); min-width: 1ch; }
 @media (max-width: 640px) { .cta__btn { width: 100%; justify-content: center; } }
 
 /* Diligence row — the quiet "who am I hiring" line under the CTA.
@@ -544,6 +558,8 @@ html:not(.curtain) .loader { display: none; }
 /* ---- Footer ---- */
 .footer { padding-block: clamp(2.5rem, 5vw, 4rem) clamp(1.8rem, 3vw, 2.5rem); border-top: 1px solid var(--line); }
 .footer__row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.08em; color: var(--dim); }
+.footer__acts { display: flex; align-items: center; gap: 1.6rem; }
+.footer__acts a { position: relative; }
 
 /* ---- Print ---- */
 @media print {
@@ -555,7 +571,7 @@ html:not(.curtain) .loader { display: none; }
     --brass: #7a5f22; --line: #bbbbbb;
   }
   .js [data-reveal], .js .lm > span { opacity: 1 !important; transform: none !important; }
-  .loader, .cursor, .grain, .progress, .field, .marquee { display: none !important; }
+  .skip, .grain, .progress, .field, .motion-btn { display: none !important; }
   body { background: #fff; color: #111; }
   html, body { height: auto !important; overflow: visible !important; }
   /* The mobile scroll cage also pins body; without this, printing from a
@@ -568,44 +584,18 @@ html:not(.curtain) .loader { display: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
   .js [data-reveal], .js .lm > span { opacity: 1 !important; transform: none !important; }
-  .loader { display: none !important; }
   .field { display: none; }
 }
 </style>
-<!-- The js class is still flipped by the body script (so a dead script leaves
-     everything visible rather than a curtain over hidden content). This only
-     raises the curtain, which the CSS failsafe above can lift without JS. -->
-<script>
-  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    document.documentElement.classList.add("curtain");
-    /* The watchdog lives HERE, in the head, because this is the only place
-       it cannot be aborted. The body script adds .js as its first statement
-       but nothing lifts the curtain until ~440 lines later — so a single
-       runtime error in between would strand a visitor behind an opaque
-       full-screen panel. A timer set now survives any later exception, and
-       dropping .curtain re-applies `html:not(.curtain) .loader{display:none}`.
-       It also ends the slow-script race: once the curtain is gone it can
-       never re-cover a page the visitor is already reading. */
-    setTimeout(function () {
-      document.documentElement.classList.remove("curtain");
-    }, 3000);
-  }
-</script>
+
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <canvas class="field" aria-hidden="true"></canvas>
 <div class="grain" aria-hidden="true"></div>
-<div class="cursor is-hidden" aria-hidden="true"><span class="cursor__label"></span></div>
 <div class="progress" aria-hidden="true"></div>
 
-<div class="loader" id="loader" aria-hidden="true">
-  <div>
-    <div class="loader__mark">JC</div>
-    <div class="loader__count"><span id="loaderCount">000</span> / Joe Curry</div>
-    <div class="loader__bar"><i id="loaderBar"></i></div>
-  </div>
-</div>
 
 <header class="header">
   <div class="header__row">
@@ -613,18 +603,18 @@ html:not(.curtain) .loader { display: none; }
     <div class="header__meta">
       <nav class="nav-links" aria-label="Primary">
         <a href="#work">Work</a>
-        <a href="#studio">Studio</a>
+        <a href="#engagements">Services</a>
+        <a href="#studio" class="nav-desk">Studio</a>
         <a href="#contact">Contact</a>
       </nav>
-      <span class="clock" id="clock" aria-hidden="true">--:--:--</span>
-      <a href="mailto:jjcurry027@gmail.com" data-cursor="EMAIL">Email</a>
-      <a href="https://www.linkedin.com/in/joseph-curry-940738129/" target="_blank" rel="me noopener" data-cursor="LINKEDIN">LinkedIn</a>
+      <button type="button" class="motion-btn" data-motion><i aria-hidden="true"></i><span>Pause motion</span></button>
+      <a class="hdr-ext" href="https://www.linkedin.com/in/joseph-curry-940738129/" target="_blank" rel="me noopener">LinkedIn</a>
     </div>
   </div>
 </header>
 
 <div class="scroll-root" id="scrollRoot">
-<main>
+<main id="main" tabindex="-1">
 
   <!-- ===== HERO ===== -->
   <section class="hero wrap" id="top">
@@ -633,12 +623,12 @@ html:not(.curtain) .loader { display: none; }
     </div>
     <div class="hero__intro" data-reveal>
       <p class="hero__intro-copy">
-        I design and build digital products powered by data and AI.
-        <span>From first idea to daily operation.</span>
+        Websites, dashboards and data tools for businesses that have outgrown their spreadsheets.
+        <span>Designed, built, checked and kept running by one person, from first idea to daily operation.</span>
       </p>
       <div class="hero__actions">
-        <a class="hero__action hero__action--primary" href="#work" data-cursor="WORK"><span class="dot"></span>View selected work ↓</a>
-        <a class="hero__action" href="mailto:jjcurry027@gmail.com" data-cursor="EMAIL">Start a project ↗</a>
+        <a class="hero__action hero__action--primary" href="#work"><span class="dot"></span>See the work ↓</a>
+        <a class="hero__action" href="#contact">Start a project →</a>
       </div>
     </div>
     <h1 class="hero__wordmark" id="wordmark">
@@ -655,19 +645,11 @@ html:not(.curtain) .loader { display: none; }
     </div>
   </section>
 
-  <!-- ===== MARQUEE ===== -->
-  <div class="marquee" aria-hidden="true">
-    <div class="marquee__track" id="marquee">
-      <span>Product Design</span><span>Web Development</span><span>Data &amp; Modeling</span><span>AI Integration</span><span>Operation</span>
-      <span>Product Design</span><span>Web Development</span><span>Data &amp; Modeling</span><span>AI Integration</span><span>Operation</span>
-    </div>
-  </div>
-
   <!-- ===== WORK ===== -->
   <section class="section work wrap" id="work">
     <div class="work__head">
       <h2 class="work__title" data-reveal>Selected work</h2>
-      <p class="eyebrow" data-reveal>(01) Case studies</p>
+      <p class="eyebrow" data-reveal>(01) Projects · figures as of Oct 2026</p>
     </div>
 
     <div class="work__grid">
@@ -688,8 +670,28 @@ html:not(.curtain) .loader { display: none; }
           <h3 class="case__name">Public Ledger</h3>
           <span class="case__role">Data · Build · Daily ops</span>
         </div>
+        <span class="case__kind"><b>Independent product</b> · live · not affiliated with the City</span>
         <p class="case__line">North Tonawanda’s checkbook, made checkable: every claim the council approved, parsed from the City’s own PDFs and tied to its printed totals.</p>
-        <p class="case__receipt"><b>12,637</b> claims · <b>52 of 52</b> warrants tie to the penny · <b>67</b> flags</p>
+        <p class="case__receipt"><b>12,637</b> approved claims · <b>52 of 52</b> council bill lists (warrants) tie to the penny · <b>67</b> questions flagged</p>
+        <details class="case__story">
+          <summary>How it was built</summary>
+          <dl>
+            <dt>The problem</dt>
+            <dd>The City posts each council meeting’s bill list as a PDF: 52 of them across 2025 and 2026, six only as scanned images. No one could search them, total them or check them.</dd>
+            <dt>My part</dt>
+            <dd>All of it: the readers that pull every line out of the PDFs, the checks, the design and the writing, and the daily refresh.</dd>
+            <dt>Decisions</dt>
+            <dd><ol>
+              <li>A document ships only when its lines add back to the totals printed on it. All 52 tie to the penny.</li>
+              <li>Every line opens on its own page of the City’s PDF, with the line outlined.</li>
+              <li>The words stay inside the record: approved claims, not payments; questions, not findings.</li>
+            </ol></dd>
+            <dt>What shipped</dt>
+            <dd>The City’s spending, the County’s finances across 31 years, 6,105 County Legislature resolutions with their votes, a map of all 20 cities, towns and villages, and a report of 67 questions worth asking.</dd>
+            <dt>Limits</dt>
+            <dd>It shows what was approved and filed, not audited spending, and it is built from public records by a resident, independently.</dd>
+          </dl>
+        </details>
         <a class="case__visit" href="https://jcurry44.github.io/public-ledger/" target="_blank" rel="noopener" data-cursor="VISIT"><i></i>Open Public Ledger ↗</a>
       </article>
 
@@ -709,6 +711,7 @@ html:not(.curtain) .loader { display: none; }
           <h3 class="case__name">The Grants Ledger</h3>
           <span class="case__role">Data · Build · Ops</span>
         </div>
+        <span class="case__kind"><b>Independent product</b> · live</span>
         <p class="case__line">A page per foundation of what 1,935 U.S. private foundations actually filed, rebuilt from their own IRS 990-PF returns and reconciled to the dollar.</p>
         <p class="case__receipt"><b>1,935</b> foundations · <b>1,446,521</b> filed rows · <b>$303.9B</b> reconciled</p>
         <a class="case__visit" href="https://jcurry44.github.io/grants-ledgers/" target="_blank" rel="noopener" data-cursor="VISIT"><i></i>Open The Grants Ledger ↗</a>
@@ -730,9 +733,10 @@ html:not(.curtain) .loader { display: none; }
           <h3 class="case__name">Nicastro Accounting</h3>
           <span class="case__role">Design · Build</span>
         </div>
+        <span class="case__kind"><b>Client project</b> · in owner review</span>
         <p class="case__line">A North Tonawanda accounting firm’s site that computes: a living ledger that balances on load, a tax-deadline radar, and a document-checklist builder.</p>
-        <p class="case__receipt">Client build · <b>one file</b>, no framework · phone-first</p>
-        <span class="case__status">In owner review</span>
+        <p class="case__receipt">A fast, phone-first site with working tools, not a template</p>
+        <span class="case__status">Not linked until the owners sign off</span>
       </article>
 
       <!-- 04 Icenomics -->
@@ -749,10 +753,11 @@ html:not(.curtain) .loader { display: none; }
         </a>
         <div class="case__meta">
           <h3 class="case__name">Icenomics</h3>
-          <span class="case__role">Concept · Data · Build · Ops</span>
+          <span class="case__role">Concept · Data · Build</span>
         </div>
-        <p class="case__line">The public NHL front office that keeps a book: contract models with published accuracy, and arbitration calls frozen and anchored before each hearing.</p>
-        <p class="case__receipt"><b>2,000+</b> player pages · forecasts <b>pre-registered</b> · data ops <b>daily</b></p>
+        <span class="case__kind"><b>Independent product</b> · live · data as of early Oct 2026</span>
+        <p class="case__line">The public NHL front office that keeps a book: contract models with their accuracy measured and posted, and arbitration calls frozen and anchored before each hearing.</p>
+        <p class="case__receipt"><b>2,000+</b> player pages · forecasts <b>pre-registered</b> before each result</p>
         <a class="case__visit" href="https://jcurry44.github.io/Icenomics/" target="_blank" rel="noopener" data-cursor="VISIT"><i></i>Open Icenomics ↗</a>
       </article>
 
@@ -762,29 +767,34 @@ html:not(.curtain) .loader { display: none; }
   <!-- ===== ENGAGEMENTS ===== -->
   <section class="section eng-sec wrap" id="engagements">
     <div class="eng__head">
-      <h2 class="eng__title" data-reveal>Engagements</h2>
+      <h2 class="eng__title" data-reveal>Services</h2>
       <p class="eyebrow" data-reveal>(02) What to hire</p>
     </div>
     <p class="eng__lede" data-reveal>Built in Buffalo for Western New York businesses and practices that
-      run on spreadsheets — three fixed-shape ways to start, each delivered as a working thing, not a
-      proposal.</p>
+      run on spreadsheets: the same tie-to-the-printed-total checks as the ledgers above, applied to your books. Three ways to start, each delivered as a working thing, not a proposal.</p>
     <div class="eng__grid">
       <article class="eng" data-reveal>
         <span class="eng__num">E·01</span>
         <h3 class="eng__name">Business Health Dashboard</h3>
         <p class="eng__desc">Your QuickBooks, payroll and bank exports become one exception-first dashboard: what’s owed and aging, which jobs burn faster than they bill, where the month went. Mapped once, re-dropped monthly.</p>
+        <p class="eng__fit"><b>Best for</b>an owner who checks the business in three different exports.</p>
+        <a class="eng__ask" href="mailto:jjcurry027@gmail.com?subject=Business%20Health%20Dashboard&body=What%20I%27m%20trying%20to%20improve%3A%0D%0A%0D%0AWhat%20I%20use%20today%3A%0D%0A%0D%0AWhen%20I%20need%20it%3A%0D%0A">Ask about this →</a>
         <span class="eng__shape">Scoped setup + monthly run rate</span>
       </article>
       <article class="eng" data-reveal>
         <span class="eng__num">E·02</span>
         <h3 class="eng__name">The Monthly Brief</h3>
-        <p class="eng__desc">A one-page brief on your books that refuses to render unless it ties to your statements’ printed totals. Flags framed as questions, every number traceable to its source line.</p>
+        <p class="eng__desc">A one-page brief on your books each month, checked against your statements’ printed totals before it reaches you; anything that doesn’t tie is held for review. Flags framed as questions, every number traceable to its source line.</p>
+        <p class="eng__fit"><b>Best for</b>a practice that wants a monthly read, not another tool to log into.</p>
+        <a class="eng__ask" href="mailto:jjcurry027@gmail.com?subject=The%20Monthly%20Brief&body=What%20I%27m%20trying%20to%20improve%3A%0D%0A%0D%0AWhat%20I%20use%20today%3A%0D%0A%0D%0AWhen%20I%20need%20it%3A%0D%0A">Ask about this →</a>
         <span class="eng__shape">Per month · per entity</span>
       </article>
       <article class="eng" data-reveal>
         <span class="eng__num">E·03</span>
         <h3 class="eng__name">Sites &amp; tools that compute</h3>
         <p class="eng__desc">Hand-built sites and working tools — estimators, checklist builders, decision aids — designed, built, deployed, then actually run: monitoring, updates and daily data ops included.</p>
+        <p class="eng__fit"><b>Best for</b>a business whose website should do something: estimate, check or decide.</p>
+        <a class="eng__ask" href="mailto:jjcurry027@gmail.com?subject=A%20site%20or%20tool&body=What%20I%27m%20trying%20to%20improve%3A%0D%0A%0D%0AWhat%20I%20use%20today%3A%0D%0A%0D%0AWhen%20I%20need%20it%3A%0D%0A">Ask about this →</a>
         <span class="eng__shape">Project-scoped · build + run</span>
       </article>
     </div>
@@ -798,13 +808,20 @@ html:not(.curtain) .loader { display: none; }
     <div class="studio__grid">
       <h2 class="studio__lead"><span class="lm"><span>The whole job,</span></span><span class="lm"><span>one pair of hands.</span></span></h2>
       <div class="studio__body">
-        <p data-reveal>I'm Joe Curry — I build web products the whole way through: the idea, the brand, the interface, the data model, the deployment, and the boring-but-vital part where it keeps running every day after launch.</p>
+        <p data-reveal>I’m Joe Curry. I build web products the whole way through: the idea, the brand, the interface, the data model, the deployment, and the boring-but-vital part where it keeps running after launch.</p>
+        <h3 class="studio__h3" data-reveal>How a project runs</h3>
+        <ol class="studio__steps" data-reveal>
+          <li><span>A conversation about <b>what you’re trying to improve</b> and what you use today.</span></li>
+          <li><span>A <b>written scope and price</b> before any work starts.</span></li>
+          <li><span>A <b>working version early</b>, refined with you.</span></li>
+          <li><span>Then I <b>keep it running</b>, on support terms we agree in writing.</span></li>
+        </ol>
         <p data-reveal class="studio__note studio__note--fit">The background of this page is a live weighted least-squares model — a curve continuously re-fit through drifting data points, and any you scatter with your pointer. That’s the studio in one image: signal from noise, computed in front of you.</p>
         <p data-reveal class="studio__note studio__note--signal">The background is a live signal surface — quiet at rest, responsive to touch, and designed to resolve back to clarity. That’s the studio in one image: input becomes a deliberate, computed response.</p>
         <div class="studio__stats">
           <div data-reveal><a href="#public-ledger"><div class="stat__n">52 / 52</div><div class="stat__l">Warrants tie to the penny</div></a></div>
           <div data-reveal><a href="#grants-ledger"><div class="stat__n">1,935</div><div class="stat__l">Foundations reconciled</div></a></div>
-          <div data-reveal><a href="#icenomics"><div class="stat__n">2,000+</div><div class="stat__l">Player pages, run daily</div></a></div>
+          <div data-reveal><a href="#icenomics"><div class="stat__n">2,000+</div><div class="stat__l">Player pages</div></a></div>
         </div>
       </div>
     </div>
@@ -814,9 +831,11 @@ html:not(.curtain) .loader { display: none; }
   <section class="section cta wrap" id="contact">
     <p class="eyebrow" data-reveal style="margin-bottom: clamp(1.5rem, 3vw, 2.5rem)">(04) Contact</p>
     <h2 class="cta__line"><span class="lm"><span>Have a thing that</span></span><span class="lm"><span>should compute?</span></span></h2>
-    <a href="mailto:jjcurry027@gmail.com?subject=A%20thing%20that%20should%20compute" class="cta__btn" data-cursor="EMAIL">
-      <span class="dot"></span> jjcurry027@gmail.com
+    <p class="cta__lede" data-reveal>Tell me what you’re trying to improve, what you use today, and when you need it. I’ll help you work out the smallest useful first step.</p>
+    <a href="mailto:jjcurry027@gmail.com?subject=A%20project&body=What%20I%27m%20trying%20to%20improve%3A%0D%0A%0D%0AWhat%20I%20use%20today%3A%0D%0A%0D%0AWhen%20I%20need%20it%3A%0D%0A" class="cta__btn">
+      <span class="dot"></span> Email Joe about a project
     </a>
+    <p class="cta__addr"><span>jjcurry027@gmail.com</span><button type="button" class="cta__copy" data-copy="jjcurry027@gmail.com">Copy email address</button><span class="cta__copied" role="status" aria-live="polite"></span></p>
     <div class="cta__diligence" data-reveal>
       <span class="cta__diligence-lead">Diligence</span>
       <a href="https://www.linkedin.com/in/joseph-curry-940738129/" target="_blank" rel="me noopener" data-cursor="LINKEDIN">LinkedIn ↗</a>
@@ -836,7 +855,10 @@ html:not(.curtain) .loader { display: none; }
   <div class="footer__row">
     <span>© <span id="year">2026</span> Joe Curry</span>
     <span>Racing green · System serif<span class="colophon-field"> · <span class="hud--fit">Live least squares</span><span class="hud--signal">Interactive signal field</span></span></span>
-    <a href="#top" data-cursor="TOP">Back to top ↑</a>
+    <span class="footer__acts">
+      <button type="button" class="motion-btn" data-motion><i aria-hidden="true"></i><span>Pause motion</span></button>
+      <a href="#top">Back to top ↑</a>
+    </span>
   </div>
 </footer>
 </div>
@@ -868,7 +890,7 @@ html:not(.curtain) .loader { display: none; }
 (function () {
   "use strict";
 
-  /* Flip no-js → js HERE: reveal-hiding and the loader only engage once
+  /* Flip no-js → js HERE: reveal-hiding only engages once
      this script is provably running. */
   document.documentElement.classList.remove("no-js");
   document.documentElement.classList.add("js");
@@ -880,69 +902,33 @@ html:not(.curtain) .loader { display: none; }
 
   /* Mobile uses an inner native scroller so the fixed signal surface remains
      continuously composited through iOS momentum. Route hash links to it. */
+  function landOn(hash, smooth) {
+    const target = hash && hash.length > 1 ? document.getElementById(hash.slice(1)) : null;
+    if (!target) return false;
+    target.scrollIntoView({ behavior: smooth && !reduceMotion && !document.documentElement.classList.contains("motion-off") ? "smooth" : "auto", block: "start" });
+    if (!target.hasAttribute("tabindex") && !/^(A|BUTTON|INPUT|SELECT|TEXTAREA|SUMMARY)$/.test(target.tagName)) target.setAttribute("tabindex", "-1");
+    target.focus({ preventScroll: true });
+    return true;
+  }
   if (pageScroller) {
     document.addEventListener("click", (event) => {
       const link = event.target.closest('a[href^="#"]');
       if (!link) return;
-      const target = document.querySelector(link.getAttribute("href"));
-      if (!target) return;
+      const hash = link.getAttribute("href");
+      if (!document.getElementById(hash.slice(1))) return;
       event.preventDefault();
-      target.scrollIntoView({
-        behavior: reduceMotion ? "auto" : "smooth",
-        block: "start"
-      });
+      if (location.hash !== hash) history.pushState(null, "", hash);
+      landOn(hash, true);
     });
+    addEventListener("popstate", () => { if (!landOn(location.hash, false)) pageScroller.scrollTop = 0; });
+    if (location.hash) requestAnimationFrame(() => landOn(location.hash, false));
   }
 
-  /* ---- Clock (Eastern) ---- */
-  (function clock() {
-    const el = document.getElementById("clock");
-    if (!el) return;
-    const fmt = new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false, timeZone: "America/New_York" });
-    const tick = () => { el.textContent = fmt.format(new Date()); };
-    tick(); setInterval(tick, 1000);
-  })();
 
   /* ---- Footer year ---- */
   const yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  /* ---- Loader (watchdog first: rAF doesn't tick in background tabs,
-          and a page must never trap itself behind its own curtain) ---- */
-  function runLoader(done) {
-    const loader = document.getElementById("loader");
-    if (!loader || reduceMotion) { if (loader) loader.classList.add("is-done"); return done(); }
-    const count = document.getElementById("loaderCount");
-    const bar = document.getElementById("loaderBar");
-    let finished = false;
-    /* Removing .curtain also disarms the head watchdog — but only once the
-       slide has played, since .curtain is what keeps the loader displayed. */
-    function retire() {
-      loader.classList.add("is-done");
-      document.documentElement.classList.remove("curtain");
-    }
-    function finish() {
-      if (finished) return; finished = true;
-      loader.classList.add("is-leaving");
-      loader.addEventListener("transitionend", retire, { once: true });
-      setTimeout(retire, 1200);
-      done();
-    }
-    setTimeout(finish, 2200);
-    /* 560ms, not 900: a prospective client should not wait on theater. The
-       curtain now also starts covering from first paint, so the total time
-       to a usable page dropped rather than moved. */
-    const t0 = performance.now(), DUR = 560;
-    (function step(now) {
-      const p = Math.min((now - t0) / DUR, 1);
-      const eased = 1 - Math.pow(1 - p, 3);
-      const n = Math.round(eased * 100);
-      count.textContent = String(n).padStart(3, "0");
-      bar.style.width = n + "%";
-      if (p < 1) return requestAnimationFrame(step);
-      setTimeout(finish, 60);
-    })(t0);
-  }
 
   /* ---- Reveals ---- */
   function initReveals() {
@@ -965,98 +951,88 @@ html:not(.curtain) .loader { display: none; }
     rest.forEach((el) => io.observe(el));
   }
 
-  /* ---- Cursor ---- */
-  (function cursor() {
-    if (!canHover) return;
-    const cur = document.querySelector(".cursor");
-    if (!cur) return;
-    const lbl = cur.querySelector(".cursor__label");
-    let tx = innerWidth / 2, ty = innerHeight / 2, x = tx, y = ty, visible = false, raf = null;
-    function frame() {
-      x += (tx - x) * 0.18;
-      y += (ty - y) * 0.18;
-      cur.style.transform = "translate(" + x + "px," + y + "px) translate(-50%,-50%)";
-      raf = (Math.abs(tx - x) > 0.1 || Math.abs(ty - y) > 0.1) ? requestAnimationFrame(frame) : null;
-    }
-    addEventListener("mousemove", (e) => {
-      tx = e.clientX; ty = e.clientY;
-      if (!visible) { visible = true; x = tx; y = ty; cur.classList.remove("is-hidden"); }
-      if (!raf) raf = requestAnimationFrame(frame);
-    }, { passive: true });
-    document.documentElement.addEventListener("mouseleave", () => { visible = false; cur.classList.add("is-hidden"); });
-    document.querySelectorAll("a, button, [data-cursor]").forEach((el) => {
-      const label = el.getAttribute("data-cursor");
-      el.addEventListener("mouseenter", () => {
-        cur.setAttribute("data-variant", label ? "label" : "hover");
-        if (lbl) lbl.textContent = label || "";
-      });
-      el.addEventListener("mouseleave", () => {
-        cur.removeAttribute("data-variant");
-        if (lbl) lbl.textContent = "";
-      });
-    });
-  })();
 
-  /* ---- Scroll progress + velocity marquee (one rAF loop) ---- */
-  (function scrollDriven() {
+  /* ---- Scroll progress: painted only when the page scrolls ---- */
+  (function scrollProgress() {
     const prog = document.querySelector(".progress");
-    const track = document.getElementById("marquee");
-    if (reduceMotion) return;
+    if (!prog || reduceMotion) return;
     const scrollHost = pageScroller || window;
     const getY = () => pageScroller ? pageScroller.scrollTop : scrollY;
+    let progressRaf = 0;
+    const paintProgress = () => {
+      progressRaf = 0;
+      const max = pageScroller
+        ? pageScroller.scrollHeight - pageScroller.clientHeight
+        : document.documentElement.scrollHeight - innerHeight;
+      prog.style.transform = "scaleX(" + (max > 0 ? getY() / max : 0) + ")";
+    };
+    const requestProgress = () => { if (!progressRaf) progressRaf = requestAnimationFrame(paintProgress); };
+    scrollHost.addEventListener("scroll", requestProgress, { passive: true });
+    addEventListener("resize", requestProgress, { passive: true });
+    requestProgress();
+  })();
 
-    /* On touch devices, the marquee stays typographically still and progress
-       updates only when scrolling. This leaves the main thread quiet at rest. */
-    if (!canHover) {
-      let progressRaf = 0;
-      const paintProgress = () => {
-        progressRaf = 0;
-        if (!prog) return;
-        const max = pageScroller
-          ? pageScroller.scrollHeight - pageScroller.clientHeight
-          : document.documentElement.scrollHeight - innerHeight;
-        prog.style.transform = "scaleX(" + (max > 0 ? getY() / max : 0) + ")";
-      };
-      const requestProgress = () => {
-        if (!progressRaf) progressRaf = requestAnimationFrame(paintProgress);
-      };
-      scrollHost.addEventListener("scroll", requestProgress, { passive: true });
-      addEventListener("resize", requestProgress, { passive: true });
-      requestProgress();
-      return;
+  /* ---- Motion: one switch (header on desktop, the foot everywhere) stops the field, the pulses and the reveals.
+         The OS setting decides first and is followed when it changes; a visitor's own choice is remembered. ---- */
+  (function motion() {
+    const root = document.documentElement;
+    const q = matchMedia("(prefers-reduced-motion: reduce)");
+    const btns = [...document.querySelectorAll("[data-motion]")];
+    if (window.__FIELD_MODE__ !== "none") root.classList.add("can-motion");
+    let saved = null;
+    try { saved = localStorage.getItem("jc-motion"); } catch (_) {}
+    function apply(off, persist) {
+      root.classList.toggle("motion-off", off);
+      btns.forEach((b) => { const t = b.querySelector("span"); if (t) t.textContent = off ? "Resume motion" : "Pause motion"; });
+      dispatchEvent(new CustomEvent("studio:motion", { detail: { off: off } }));
+      if (persist) { try { localStorage.setItem("jc-motion", off ? "off" : "on"); } catch (_) {} }
     }
+    apply(saved ? saved === "off" : q.matches, false);
+    btns.forEach((b) => b.addEventListener("click", () => apply(!root.classList.contains("motion-off"), true)));
+    const onQ = (e) => apply(e.matches, false);
+    if (typeof q.addEventListener === "function") q.addEventListener("change", onQ);
+    else if (typeof q.addListener === "function") q.addListener(onQ);
+  })();
 
-    let vel = 0, lastY = getY(), mx = 0, lastT = performance.now();
-    scrollHost.addEventListener("scroll", () => { const y = getY(); vel = y - lastY; lastY = y; }, { passive: true });
-    function frame(t) {
-      const dt = Math.min(t - lastT, 50); lastT = t;
-      if (prog) {
-        const max = pageScroller
-          ? pageScroller.scrollHeight - pageScroller.clientHeight
-          : document.documentElement.scrollHeight - innerHeight;
-        prog.style.transform = "scaleX(" + (max > 0 ? getY() / max : 0) + ")";
+  /* ---- Copy the address (a visitor with no mail app still gets it in one tap) ---- */
+  document.querySelectorAll("[data-copy]").forEach((btn) => {
+    const out = btn.parentNode.querySelector(".cta__copied");
+    btn.addEventListener("click", async () => {
+      const v = btn.getAttribute("data-copy");
+      let ok = false;
+      try { await navigator.clipboard.writeText(v); ok = true; } catch (_) {
+        try {
+          const t = document.createElement("textarea");
+          t.value = v; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.opacity = "0";
+          document.body.appendChild(t); t.select(); ok = document.execCommand("copy"); t.remove();
+        } catch (__) {}
       }
-      if (track && !track.__filled && track.scrollWidth > 0) {
-        /* One copy must span the viewport for the exact-half wrap to be seamless */
-        let guard = 0;
-        while (track.scrollWidth / 2 < innerWidth && guard++ < 6) track.innerHTML += track.innerHTML;
-        track.__filled = true;
-        addEventListener("resize", () => {
-          let g = 0;
-          while (track.scrollWidth / 2 < innerWidth && g++ < 6) track.innerHTML += track.innerHTML;
-        });
-      }
-      if (track) {
-        vel *= 0.9;
-        const speed = 0.04 + Math.min(Math.abs(vel) * 0.010, 1.1);
-        mx -= speed * dt;
-        const half = track.scrollWidth / 2;
-        if (half && -mx >= half) mx += half;
-        track.style.transform = "translateX(" + mx + "px)";
-      }
-      requestAnimationFrame(frame);
+      if (out) out.textContent = ok ? "Copied" : "Couldn’t copy: select the address";
+    });
+  });
+
+  /* ---- The hero never lets the name cross the intro (Codex audit 10-29: 900×500, and 1180×700, 1024×600,
+         900×700, 800×600 when measured): the desktop layout floats the intro over the name's corner, which only
+         works while there is room. Where the two would touch, the hero stacks, top to bottom, like a phone. ---- */
+  (function heroFit() {
+    const hero = document.querySelector(".hero"), intro = document.querySelector(".hero__intro");
+    const lines = [...document.querySelectorAll("#wordmark .lm")];
+    if (!hero || !intro || !lines.length) return;
+    let raf = 0;
+    function check() {
+      raf = 0;
+      hero.classList.remove("hero--stack");
+      if (getComputedStyle(intro).position !== "absolute") return;
+      const a = intro.getBoundingClientRect(), pad = 16;
+      const hit = lines.some((lm) => {
+        const r = document.createRange(); r.selectNodeContents(lm.firstElementChild);
+        const t = r.getBoundingClientRect(), box = lm.getBoundingClientRect();   /* the line's own box: its text may still be mid-reveal */
+        return t.left < a.right + pad && a.left - pad < t.right && box.top < a.bottom + pad && a.top - pad < box.bottom;
+      });
+      if (hit) hero.classList.add("hero--stack");
     }
-    requestAnimationFrame(frame);
+    check();
+    addEventListener("resize", () => { if (!raf) raf = requestAnimationFrame(check); }, { passive: true });
   })();
 
   /* =========================================================
@@ -1235,19 +1211,20 @@ html:not(.curtain) .loader { display: none; }
        kept drawing 60fps into a display:none canvas while the HUD and studio
        copy went on advertising a live model — the exact thing the gating
        exists to prevent. Mirrors the signal path's handler. */
-    let stopped = false;
-    const fitMotionQuery = matchMedia("(prefers-reduced-motion: reduce)");
-    const onFitMotionChange = (event) => {
-      if (!event.matches || stopped) return;
-      stopped = true;
-      document.documentElement.classList.remove("has-field");
-      document.documentElement.removeAttribute("data-field");
-    };
-    if (typeof fitMotionQuery.addEventListener === "function") fitMotionQuery.addEventListener("change", onFitMotionChange);
-    else if (typeof fitMotionQuery.addListener === "function") fitMotionQuery.addListener(onFitMotionChange);
+    let stopped = document.documentElement.classList.contains("motion-off"), running = false;
+    /* paused, the last frame stays as a still picture and the "live" captions come down; played, the loop resumes */
+    addEventListener("studio:motion", (event) => {
+      const off = !!(event.detail && event.detail.off);
+      stopped = off;
+      if (off) {                                   /* frame() re-stamps the live flags once a fit exists again */
+        fieldLive = false;
+        document.documentElement.classList.remove("has-field");
+        document.documentElement.removeAttribute("data-field");
+      } else if (!running) { running = true; lastFrameT = 0; requestAnimationFrame(frame); }
+    });
 
     function frame() {
-      if (stopped) return;
+      if (stopped) { running = false; return; }
       const now = performance.now();
       const fdt = lastFrameT ? Math.min(now - lastFrameT, 100) : 16.7; lastFrameT = now;
       phase = now / (calmField ? 14000 : 9000);
@@ -1329,15 +1306,15 @@ html:not(.curtain) .loader { display: none; }
     }
     /* No visibilitychange restart: browsers pause and resume the SAME rAF
        chain in hidden tabs — restarting by hand stacks duplicate loops. */
-    requestAnimationFrame(frame);
+    if (!stopped) { running = true; requestAnimationFrame(frame); }
   })();
 
   /* ---- Boot ---- */
   function boot() { initReveals(); }
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => runLoader(boot));
+    document.addEventListener("DOMContentLoaded", boot);
   } else {
-    runLoader(boot);
+    boot();
   }
 })();
 </script>

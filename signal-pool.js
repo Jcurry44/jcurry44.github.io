@@ -28,6 +28,25 @@
   if (typeof motionQuery.addEventListener === "function") motionQuery.addEventListener("change", onMotionChange);
   else if (typeof motionQuery.addListener === "function") motionQuery.addListener(onMotionChange);
 
+  /* The page's own Pause motion control (index.html, "studio:motion"): paused, the surface is hidden and stops
+     answering touch; played again, it comes back where it was. */
+  var userPaused = false;
+  function standDown() {
+    if (driver) driver.pause();
+    field.style.display = "none";
+    root.classList.remove("has-field");
+  }
+  window.addEventListener("studio:motion", function (event) {
+    userPaused = !!(event.detail && event.detail.off);
+    if (staticFallback) return;
+    if (userPaused) { standDown(); return; }
+    if (!driver) return;
+    field.style.removeProperty("display");
+    root.classList.add("has-field");
+    scheduleResize();
+    driver.resume();
+  });
+
   var OPTIONS = {
     dprCap: 1.5,
     life: 1.45,
@@ -71,12 +90,12 @@
   }
 
   function emitDrops(drops) {
-    if (!driver || document.hidden || !drops.length) return;
+    if (!driver || document.hidden || userPaused || !drops.length) return;
     driver.drops(drops);
   }
 
   function emitFling(x, y, vx, vy) {
-    if (!driver || document.hidden) return;
+    if (!driver || document.hidden || userPaused) return;
     driver.fling(x, y, vx, vy);
   }
 
@@ -254,7 +273,7 @@
       if (!driver) return;
       if (document.hidden) {
         driver.pause();
-      } else {
+      } else if (!userPaused) {
         scheduleResize();
         driver.resume();
       }
@@ -265,7 +284,7 @@
     }, { passive: true });
 
     window.addEventListener("pageshow", function () {
-      if (!driver || document.hidden) return;
+      if (!driver || document.hidden || userPaused) return;
       scheduleResize();
       driver.resume();
     }, { passive: true });
@@ -279,6 +298,7 @@
     observeField();
     bindControls();
     scheduleResize();
+    if (userPaused) standDown();
   }
 
   function makeStatic() {
